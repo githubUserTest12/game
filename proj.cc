@@ -10,130 +10,7 @@
 #include "texture.hpp"
 #include "tiles.hpp"
 #include "particle.hpp"
-
-class LTimer {
-	public:
-		//Initializes variables
-		LTimer();
-
-		//The various clock actions
-		void start();
-		void stop();
-		void pause();
-		void unpause();
-
-		//Gets the timer's time
-		Uint32 getTicks();
-
-		//Checks the status of the timer
-		bool isStarted();
-		bool isPaused();
-
-	private:
-		//The clock time when the timer started
-		Uint32 mStartTicks;
-
-		//The ticks stored when the timer was paused
-		Uint32 mPausedTicks;
-
-		//The timer status
-		bool mPaused;
-		bool mStarted;
-};
-
-LTimer::LTimer() {
-	//Initialize the variables
-	mStartTicks = 0;
-	mPausedTicks = 0;
-
-	mPaused = false;
-	mStarted = false;
-}
-
-void LTimer::start() {
-	//Start the timer
-	mStarted = true;
-
-	//Unpause the timer
-	mPaused = false;
-
-	//Get the current clock time
-	mStartTicks = SDL_GetTicks();
-	mPausedTicks = 0;
-}
-
-void LTimer::stop() {
-	//Stop the timer
-	mStarted = false;
-
-	//Unpause the timer
-	mPaused = false;
-
-	//Clear tick variables
-	mStartTicks = 0;
-	mPausedTicks = 0;
-}
-
-void LTimer::pause() {
-	//If the timer is running and isn't already paused
-	if( mStarted && !mPaused )
-	{
-		//Pause the timer
-		mPaused = true;
-
-		//Calculate the paused ticks
-		mPausedTicks = SDL_GetTicks() - mStartTicks;
-		mStartTicks = 0;
-	}
-}
-
-void LTimer::unpause() {
-	//If the timer is running and paused
-	if( mStarted && mPaused )
-	{
-		//Unpause the timer
-		mPaused = false;
-
-		//Reset the starting ticks
-		mStartTicks = SDL_GetTicks() - mPausedTicks;
-
-		//Reset the paused ticks
-		mPausedTicks = 0;
-	}
-}
-
-Uint32 LTimer::getTicks() {
-	//The actual timer time
-	Uint32 time = 0;
-
-	//If the timer is running
-	if( mStarted )
-	{
-		//If the timer is paused
-		if( mPaused )
-		{
-			//Return the number of ticks when the timer was paused
-			time = mPausedTicks;
-		}
-		else
-		{
-			//Return the current time minus the start time
-			time = SDL_GetTicks() - mStartTicks;
-		}
-	}
-
-	return time;
-}
-
-bool LTimer::isStarted() {
-	//Timer is running and paused or unpaused
-	return mStarted;
-}
-
-bool LTimer::isPaused() {
-	//Timer is running and paused
-	return mPaused && mStarted;
-}
+#include "timer.hpp"
 
 //The window we'll be rendering to
 SDL_Window *gWindow;
@@ -144,6 +21,7 @@ SDL_Renderer *gRenderer;
 // Globally used font.
 TTF_Font *gFont = NULL;
 LTexture gTextCoordinates;
+LTexture gFpsTextTexture;
 LTexture gTextVelocity;
 
 //Scene textures
@@ -165,8 +43,8 @@ class Dot {
 		static const int DOT_HEIGHT = 20;
 
 		//Maximum axis velocity of the dot
-		static const int DOT_VELY = 900; //15;
-		static const int DOT_VELX = 600; //10;
+		int DOT_VELY = 15 * SCREEN_FPS; // 15;
+		int DOT_VELX = 10 * SCREEN_FPS; //10;
 
 		//Initializes the variables allocates particles.
 		Dot();
@@ -786,15 +664,29 @@ int main(int argc, char *args[]) {
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-			float acceleration = (1.07 * 60);
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::ostringstream os;
+
+			std::stringstream timeText;
+			// Frames per second timer.
+			LTimer fpsTimer;
+
+			// Frames per second cap timer.
+			LTimer capTimer;
+
+			// Start timer.
+			int countedFrames = 0;
+			fpsTimer.start();
 
 			//While application is running
 			while(!quit) {
 				//Handle events on queue
 				while(SDL_PollEvent(&e) != 0) {
+
+					// Start cap timer.
+					capTimer.start();
+
 					//User requests quit
 					if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE) {
 						quit = true;
@@ -813,32 +705,32 @@ int main(int argc, char *args[]) {
 					dot.handleEvent(e);
 				}
 
+				// Calculate and correct fps.
+				float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
+				if(avgFPS > 2000000) avgFPS = 0;
+
+				float acceleration = 1.07 * avgFPS;
+
 				// Calculate time step.
 				float timeStep = stepTimer.getTicks() / 1000.f; //1.0;
-				std::cout << timeStep << std::endl;
+
+				// FPS text.
+				timeText.str("");
+				timeText << "FPS: " << avgFPS;
+				if(!gFpsTextTexture.loadFromRenderedText(timeText.str().c_str(), textColor)) {
+					printf("unable to render FPS texture\n");
+				}
 
 				// Gravity implementation.
-				if(dot.getVelocityY() < 900) {
+				if(dot.getVelocityY() < 15 * avgFPS) {
 					dot.setVelocityY(dot.getVelocityY() + acceleration);
 				}
-				if(dot.getVelocityY() > 900) {
-					dot.setVelocityY(900);
+				if(dot.getVelocityY() > 15 * avgFPS) {
+					dot.setVelocityY(15 * avgFPS);
 				}
-				if(dot.getVelocityY() < -1200) {
-					dot.setVelocityY(-1200);
+				if(dot.getVelocityY() < -20 * avgFPS) {
+					dot.setVelocityY(-20 * avgFPS);
 				}
-
-				/*
-				if(dot.getVelocityY() < 15) {
-					dot.setVelocityY(dot.getVelocityY() + acceleration);
-				}
-				if(dot.getVelocityY() > 15) {
-					dot.setVelocityY(15);
-				}
-				if(dot.getVelocityY() < -20) {
-					dot.setVelocityY(-20);
-				}
-				*/
 
 				//Move the dot.
 				dot.move(tileSet, timeStep);
@@ -873,12 +765,21 @@ int main(int argc, char *args[]) {
 				// Render font.
 				gTextCoordinates.render((SCREEN_WIDTH - gTextCoordinates.getWidth()),  0);
 				gTextVelocity.render((SCREEN_WIDTH - gTextVelocity.getWidth()),  30);
+				gFpsTextTexture.render((SCREEN_WIDTH - gFpsTextTexture.getWidth()),  60);
 
 				//Render dot
 				dot.render(camera, toggleParticles);
 
 				//Update screen
 				SDL_RenderPresent(gRenderer);
+				++countedFrames;
+
+				// If frame finished early.
+				int frameTicks = capTimer.getTicks();
+				if(frameTicks < SCREEN_TICKS_PER_FRAME) {
+					// Wait remaining time.
+					SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
+				}
 			}
 		}
 

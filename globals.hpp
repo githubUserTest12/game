@@ -13,6 +13,10 @@ const int SCREEN_HEIGHT = 768;
 const int LEVEL_WIDTH = 1280;
 const int LEVEL_HEIGHT = 960;
 
+// Frame rate cap.
+const int SCREEN_FPS = 60;
+const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
+
 //Tile constants
 const int TILE_WIDTH = 80;
 const int TILE_HEIGHT = 80;
