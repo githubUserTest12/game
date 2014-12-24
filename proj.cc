@@ -12,7 +12,24 @@
 #include "particle.hpp"
 
 // Particle engine.
-const int TOTAL_PARTICLES = 20;
+const int TOTAL_PARTICLES = 15;
+
+//The window we'll be rendering to
+SDL_Window *gWindow;
+
+//The window renderer
+SDL_Renderer *gRenderer; 
+
+// Globally used font.
+TTF_Font *gFont = NULL;
+LTexture gTextCoordinates;
+LTexture gTextVelocity;
+
+//Scene textures
+LTexture gDotTexture;
+LTexture gTileTexture;
+SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+
 
 LTexture gRedTexture;
 LTexture gGreenTexture;
@@ -46,7 +63,7 @@ class Dot {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the dot on the screen
-		void render(SDL_Rect &camera);
+		void render(SDL_Rect &camera, bool toggleParticles);
 
 		bool isJumping;
 
@@ -77,7 +94,7 @@ class Dot {
 		Particle *particles[TOTAL_PARTICLES];
 
 		// Render particles.
-		void renderParticles(SDL_Rect &camera);
+		void renderParticles(SDL_Rect &camera, bool toggleParticles);
 
 		//Collision box of the dot
 		SDL_Rect mBox;
@@ -98,22 +115,6 @@ void close(Tile *tiles[]);
 //Sets tiles from tile map
 bool setTiles(Tile *tiles[], std::string mapName);
 
-//The window we'll be rendering to
-SDL_Window *gWindow;
-
-//The window renderer
-SDL_Renderer *gRenderer; 
-
-// Globally used font.
-TTF_Font *gFont = NULL;
-LTexture gTextCoordinates;
-LTexture gTextVelocity;
-
-//Scene textures
-LTexture gDotTexture;
-LTexture gTileTexture;
-SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
-
 Dot::Dot() {
 	//Initialize the collision box
 	mBox.x = 0;
@@ -126,7 +127,7 @@ Dot::Dot() {
 	mVelX = 0;
 	mVelY = 0;
 
-	// Initialize the velocity.
+	// Initialize the particles.
 	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
 		particles[i] = new Particle(getBoxPosition().x, getBoxPosition().y);
 	}
@@ -140,19 +141,28 @@ Dot::~Dot() {
 	}
 }
 
-void Dot::renderParticles(SDL_Rect &camera) {
-	// Go through particles.
-	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-		// Delete and replace dead particles.
-		if(particles[i]->isDead()) {
+void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
+	if(toggleParticles) {
+		// Go through particles.
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+			// Delete and replace dead particles.
+			if(particles[i]->isDead()) {
+				delete particles[i];
+				particles[i] = new Particle(getBoxPosition().x - camera.x, getBoxPosition().y - camera.y);
+			}
+		}
+
+		// Show particles.
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+			particles[i]->render();
+		}
+	}
+	else {
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+			// Delete and replace dead particles.
 			delete particles[i];
 			particles[i] = new Particle(getBoxPosition().x - camera.x, getBoxPosition().y - camera.y);
 		}
-	}
-
-	// Show particles.
-	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-		particles[i]->render();
 	}
 }
 
@@ -253,12 +263,12 @@ void Dot::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Dot::render(SDL_Rect &camera) {
+void Dot::render(SDL_Rect &camera, bool toggleParticles) {
 	//Show the dot
 	gDotTexture.render(mBox.x - camera.x, mBox.y - camera.y);
 
 	// Show particles on top of dot.
-	renderParticles(camera);
+	renderParticles(camera, toggleParticles);
 }
 
 bool init() {
@@ -384,6 +394,10 @@ void close(Tile *tiles[]) {
 	}
 
 	//Free loaded images
+	gRedTexture.free();
+	gBlueTexture.free();
+	gGreenTexture.free();
+	gShimmerTexture.free();
 	gDotTexture.free();
 	gTileTexture.free();
 	gTextCoordinates.free();
@@ -613,6 +627,7 @@ int main(int argc, char *args[]) {
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 			float acceleration = 1.07;
+			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::ostringstream os;
 
@@ -629,6 +644,9 @@ int main(int argc, char *args[]) {
 					}
 					if(e.key.keysym.sym == SDLK_2) {
 						setTiles(tileSet, "lazy.map");
+					}
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_3) {
+						toggleParticles = !toggleParticles;
 					}
 
 					// input for the dot
@@ -648,7 +666,7 @@ int main(int argc, char *args[]) {
 				//Move the dot
 				dot.move(tileSet);
 				dot.setCamera(camera);
-
+				
 				os.str("");
 				os << dot.getBoxPosition().x << ", " << dot.getBoxPosition().y;
 				if(!gTextCoordinates.loadFromRenderedText(os.str(), textColor)) {
@@ -677,7 +695,7 @@ int main(int argc, char *args[]) {
 				gTextVelocity.render((SCREEN_WIDTH - gTextVelocity.getWidth()),  30);
 
 				//Render dot
-				dot.render(camera);
+				dot.render(camera, toggleParticles);
 
 				//Update screen
 				SDL_RenderPresent(gRenderer);
