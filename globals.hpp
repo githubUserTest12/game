@@ -45,5 +45,10 @@ extern TTF_Font *gFont;
 extern bool checkCollision(SDL_Rect a, SDL_Rect b);
 extern LTexture gTileTexture;
 extern SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+
+extern LTexture gRedTexture;
+extern LTexture gGreenTexture;
+extern LTexture gBlueTexture;
+extern LTexture gShimmerTexture;
 #endif
 

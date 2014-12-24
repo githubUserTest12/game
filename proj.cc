@@ -9,6 +9,7 @@
 #include "globals.hpp"
 #include "texture.hpp"
 #include "tiles.hpp"
+#include "particle.hpp"
 
 // Particle engine.
 const int TOTAL_PARTICLES = 20;
@@ -17,60 +18,6 @@ LTexture gRedTexture;
 LTexture gGreenTexture;
 LTexture gBlueTexture;
 LTexture gShimmerTexture;
-
-class Particle {
-	public:
-		// Initialize position and animation.
-		Particle(int x, int y);
-
-		// Shows the particle.
-		void render();
-
-		// Checks if particle is dead.
-		bool isDead();
-
-	private:
-		// Offsets
-		int mPosX, mPosY;
-		// Current frame of animation.
-		int mFrame;
-
-		// Type of particle.
-		LTexture *mTexture;
-};
-
-Particle::Particle(int x, int y) {
-	// Set offsets.
-	mPosX = x - 5 + (rand() % 25);
-	mPosY = y - 5 + (rand() % 25);
-
-	// Initialize the animation.
-	mFrame = rand() % 5;
-
-	// Set type.
-	switch(rand() % 3) {
-		case 0: mTexture = &gRedTexture; break;
-		case 1: mTexture = &gGreenTexture; break;
-		case 2: mTexture = &gBlueTexture; break;
-	}
-}
-
-void Particle::render() {
-	// Show image.
-	mTexture->render(mPosX, mPosY);
-
-	// show shimmer.
-	if(mFrame % 2 == 0) {
-		gShimmerTexture.render(mPosX, mPosY);
-	}
-
-	// animate.
-	mFrame++;
-}
-
-bool Particle::isDead() {
-	return mFrame > 10;
-}
 
 //The dot that will move around on the screen
 class Dot {
