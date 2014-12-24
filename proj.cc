@@ -10,6 +10,68 @@
 #include "texture.hpp"
 #include "tiles.hpp"
 
+// Particle engine.
+const int TOTAL_PARTICLES = 20;
+
+LTexture gRedTexture;
+LTexture gGreenTexture;
+LTexture gBlueTexture;
+LTexture gShimmerTexture;
+
+class Particle {
+	public:
+		// Initialize position and animation.
+		Particle(int x, int y);
+
+		// Shows the particle.
+		void render();
+
+		// Checks if particle is dead.
+		bool isDead();
+
+	private:
+		// Offsets
+		int mPosX, mPosY;
+		// Current frame of animation.
+		int mFrame;
+
+		// Type of particle.
+		LTexture *mTexture;
+};
+
+Particle::Particle(int x, int y) {
+	// Set offsets.
+	mPosX = x - 5 + (rand() % 25);
+	mPosY = y - 5 + (rand() % 25);
+
+	// Initialize the animation.
+	mFrame = rand() % 5;
+
+	// Set type.
+	switch(rand() % 3) {
+		case 0: mTexture = &gRedTexture; break;
+		case 1: mTexture = &gGreenTexture; break;
+		case 2: mTexture = &gBlueTexture; break;
+	}
+}
+
+void Particle::render() {
+	// Show image.
+	mTexture->render(mPosX, mPosY);
+
+	// show shimmer.
+	if(mFrame % 2 == 0) {
+		gShimmerTexture.render(mPosX, mPosY);
+	}
+
+	// animate.
+	mFrame++;
+}
+
+bool Particle::isDead() {
+	return mFrame > 10;
+}
+
 //The dot that will move around on the screen
 class Dot {
 	public:
@@ -18,10 +80,14 @@ class Dot {
 		static const int DOT_HEIGHT = 20;
 
 		//Maximum axis velocity of the dot
-		static const int DOT_VEL = 25;
+		static const int DOT_VELY = 15;
+		static const int DOT_VELX = 10;
 
-		//Initializes the variables
+		//Initializes the variables allocates particles.
 		Dot();
+
+		// Deallocates particles.
+		~Dot();
 
 		//Takes key presses and adjusts the dot's velocity
 		void handleEvent(SDL_Event &e);
@@ -35,18 +101,42 @@ class Dot {
 		//Shows the dot on the screen
 		void render(SDL_Rect &camera);
 
+		bool isJumping;
+
 		inline SDL_Rect getBoxPosition() {
 			return mBox;
 		}
 
-		float mVelY;
+		inline float getVelocityX() {
+			return mVelX;
+		}
+
+		inline float getVelocityY() {
+			return mVelY;
+		}
+
+		inline void setVelocityX(float velocity) {
+			mVelX = velocity;
+		}
+
+		inline void setVelocityY(float velocity) {
+			mVelY = velocity;
+		}
+
 
 	private:
+
+		// Particles.
+		Particle *particles[TOTAL_PARTICLES];
+
+		// Render particles.
+		void renderParticles(SDL_Rect &camera);
+
 		//Collision box of the dot
 		SDL_Rect mBox;
 
 		//The velocity of the dot
-		float mVelX;
+		float mVelX, mVelY;
 };
 
 //Starts up SDL and creates window
@@ -59,7 +149,7 @@ bool loadMedia(Tile *tiles[]);
 void close(Tile *tiles[]);
 
 //Sets tiles from tile map
-bool setTiles(Tile *tiles[]);
+bool setTiles(Tile *tiles[], std::string mapName);
 
 //The window we'll be rendering to
 SDL_Window *gWindow;
@@ -69,7 +159,8 @@ SDL_Renderer *gRenderer;
 
 // Globally used font.
 TTF_Font *gFont = NULL;
-LTexture gTextTexture;
+LTexture gTextCoordinates;
+LTexture gTextVelocity;
 
 //Scene textures
 LTexture gDotTexture;
@@ -79,13 +170,43 @@ SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
 Dot::Dot() {
 	//Initialize the collision box
 	mBox.x = 0;
-	mBox.y = 0;
+	mBox.y = LEVEL_HEIGHT;
 	mBox.w = DOT_WIDTH;
 	mBox.h = DOT_HEIGHT;
+	isJumping = false;
 
 	//Initialize the velocity
 	mVelX = 0;
 	mVelY = 0;
+
+	// Initialize the velocity.
+	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+		particles[i] = new Particle(getBoxPosition().x, getBoxPosition().y);
+	}
+
+}
+
+Dot::~Dot() {
+	// Delete particles.
+	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+		delete particles[i];
+	}
+}
+
+void Dot::renderParticles(SDL_Rect &camera) {
+	// Go through particles.
+	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+		// Delete and replace dead particles.
+		if(particles[i]->isDead()) {
+			delete particles[i];
+			particles[i] = new Particle(getBoxPosition().x - camera.x, getBoxPosition().y - camera.y);
+		}
+	}
+
+	// Show particles.
+	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+		particles[i]->render();
+	}
 }
 
 void Dot::handleEvent(SDL_Event &e) {
@@ -93,20 +214,26 @@ void Dot::handleEvent(SDL_Event &e) {
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
-			case SDLK_UP: mVelY -= DOT_VEL; break;
-			case SDLK_DOWN: mVelY += DOT_VEL; break;
-			case SDLK_LEFT: mVelX -= DOT_VEL; break;
-			case SDLK_RIGHT: mVelX += DOT_VEL; break;
+			case SDLK_SPACE: 
+				if(!isJumping) {
+					isJumping = true;
+					mVelY = 0; 
+					mVelY -= DOT_VELY; 
+				}
+				break;
+			//case SDLK_DOWN: mVelY += DOT_VELY; break;
+			case SDLK_LEFT: mVelX -= DOT_VELX; break;
+			case SDLK_RIGHT: mVelX += DOT_VELX; break;
 		}
 	}
 	//If a key was released
 	else if(e.type == SDL_KEYUP && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
-			case SDLK_UP: mVelY += DOT_VEL; break;
-			case SDLK_DOWN: mVelY -= DOT_VEL; break;
-			case SDLK_LEFT: mVelX += DOT_VEL; break;
-			case SDLK_RIGHT: mVelX -= DOT_VEL; break;
+			//case SDLK_SPACE: mVelY += DOT_VELY; break;
+			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
+			case SDLK_LEFT: mVelX += DOT_VELX; break;
+			case SDLK_RIGHT: mVelX -= DOT_VELX; break;
 		}
 	}
 }
@@ -118,8 +245,10 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
 void Dot::move(Tile *tiles[]) {
+
+	int tileTouched;
+
 	//Move the dot left or right
-	int xTouched, yTouched;
 	mBox.x += mVelX;
 
 	//If the dot went too far to the left or right or touched a wall
@@ -128,12 +257,12 @@ void Dot::move(Tile *tiles[]) {
 		if(mBox.x < 0) mBox.x = 0;
 		else mBox.x = LEVEL_WIDTH - DOT_WIDTH;
 	}
-	xTouched = touchesWall(mBox, tiles);
-	if(xTouched > -1 && mVelX > 0) {
-		mBox.x = tiles[xTouched]->getBox().x - DOT_WIDTH;
+	tileTouched = touchesWall(mBox, tiles);
+	if(tileTouched > -1 && mVelX > 0) {
+		mBox.x = tiles[tileTouched]->getBox().x - DOT_WIDTH;
 	}
-	if(xTouched > -1 && mVelX < 0) {
-		mBox.x = tiles[xTouched]->getBox().x + TILE_WIDTH;
+	if(tileTouched > -1 && mVelX < 0) {
+		mBox.x = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 
 	//Move the dot up or down
@@ -142,14 +271,18 @@ void Dot::move(Tile *tiles[]) {
 	//If the dot went too far up or down or touched a wall
 	if((mBox.y < 0) || (mBox.y + DOT_HEIGHT > LEVEL_HEIGHT)) {
 		if(mBox.y < 0) mBox.y = 0;
-		else mBox.y = LEVEL_HEIGHT - DOT_HEIGHT;
+		else {
+			mBox.y = LEVEL_HEIGHT - DOT_HEIGHT;
+			isJumping = false;
+		}
 	} 
-	yTouched = touchesWall(mBox, tiles);
-	if(yTouched > -1 && mVelY > 0) {
-		mBox.y = tiles[yTouched]->getBox().y - DOT_HEIGHT;
+	tileTouched = touchesWall(mBox, tiles);
+	if(tileTouched > -1 && mVelY > 0) {
+		mBox.y = tiles[tileTouched]->getBox().y - DOT_HEIGHT;
+		isJumping = false;
 	}
-	if(yTouched > -1 && mVelY < 0) {
-		mBox.y = tiles[yTouched]->getBox().y + TILE_HEIGHT;
+	if(tileTouched > -1 && mVelY < 0) {
+		mBox.y = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
 }
 
@@ -176,6 +309,9 @@ void Dot::setCamera(SDL_Rect &camera) {
 void Dot::render(SDL_Rect &camera) {
 	//Show the dot
 	gDotTexture.render(mBox.x - camera.x, mBox.y - camera.y);
+
+	// Show particles on top of dot.
+	renderParticles(camera);
 }
 
 bool init() {
@@ -239,6 +375,36 @@ bool loadMedia(Tile *tiles[]) {
 		success = false;
 	}
 
+	// Load red texture.
+	if(!gRedTexture.loadFromFile("red.bmp")) {
+		printf("failed to load red texture\n");
+		success = false;
+	}
+
+	// Load green texture.
+	if(!gGreenTexture.loadFromFile("green.bmp")) {
+		printf("failed to load green texture\n");
+		success = false;
+	}
+
+	// Load blue texture.
+	if(!gBlueTexture.loadFromFile("blue.bmp")) {
+		printf("failed to load blue texture\n");
+		success = false;
+	}
+
+	// Load shimmer texture.
+	if(!gShimmerTexture.loadFromFile("shimmer.bmp")) {
+		printf("failed to load shimmer texture\n");
+		success = false;
+	}
+
+	// Set texture transparency.
+	gRedTexture.setAlpha(172);
+	gGreenTexture.setAlpha(172);
+	gBlueTexture.setAlpha(172);
+	gShimmerTexture.setAlpha(172);
+
 	//Load tile texture
 	if(!gTileTexture.loadFromFile("tiles.png")) {
 		printf("Failed to load tile set texture!\n");
@@ -246,7 +412,7 @@ bool loadMedia(Tile *tiles[]) {
 	}
 
 	//Load tile map
-	if(!setTiles(tiles)) {
+	if(!setTiles(tiles, "lazy.map")) {
 		printf("Failed to load tile set!\n");
 		success = false;
 	}
@@ -256,14 +422,6 @@ bool loadMedia(Tile *tiles[]) {
 	if(gFont == NULL) {
 		printf("failed to load font, error: %s\n", TTF_GetError());
 		success = false;
-	}
-	else {
-		// Render text.
-		SDL_Color textColor = {136, 0, 21};
-		if(!gTextTexture.loadFromRenderedText("TEST", textColor)) {
-			printf("failed to render text texture\n");
-			success = false;
-		}
 	}
 
 	return success;
@@ -281,7 +439,8 @@ void close(Tile *tiles[]) {
 	//Free loaded images
 	gDotTexture.free();
 	gTileTexture.free();
-	gTextTexture.free();
+	gTextCoordinates.free();
+	gTextVelocity.free();
 
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
@@ -335,7 +494,7 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
 	return true;
 }
 
-bool setTiles(Tile *tiles[]) {
+bool setTiles(Tile *tiles[], std::string mapName) {
 	//Success flag
 	bool tilesLoaded = true;
 
@@ -343,7 +502,7 @@ bool setTiles(Tile *tiles[]) {
 	int x = 0, y = 0;
 
 	//Open the map
-	std::ifstream map("lazy.map");
+	std::ifstream map(mapName);
 
 	//If the map couldn't be loaded
 	if(map == NULL) {
@@ -506,7 +665,7 @@ int main(int argc, char *args[]) {
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-			//dot.mVelY = 15;
+			float acceleration = 1.07;
 			SDL_Color textColor = {136, 0, 21};
 			std::ostringstream os;
 
@@ -518,14 +677,25 @@ int main(int argc, char *args[]) {
 					if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE) {
 						quit = true;
 					}
-					/*
 					if(e.key.keysym.sym == SDLK_1) {
-						system("./mapchange.sh");
+						setTiles(tileSet, "lazy2.map");
 					}
-					*/
+					if(e.key.keysym.sym == SDLK_2) {
+						setTiles(tileSet, "lazy.map");
+					}
 
 					// input for the dot
 					dot.handleEvent(e);
+				}
+
+				if(dot.getVelocityY() < 15) {
+					dot.setVelocityY(dot.getVelocityY() + acceleration);
+				}
+				if(dot.getVelocityY() > 15) {
+					dot.setVelocityY(15);
+				}
+				if(dot.getVelocityY() < -20) {
+					dot.setVelocityY(-20);
 				}
 
 				//Move the dot
@@ -534,12 +704,17 @@ int main(int argc, char *args[]) {
 
 				os.str("");
 				os << dot.getBoxPosition().x << ", " << dot.getBoxPosition().y;
-				if(!gTextTexture.loadFromRenderedText(os.str(), textColor)) {
+				if(!gTextCoordinates.loadFromRenderedText(os.str(), textColor)) {
 					printf("failed to render text texture\n");
 					quit = true;
 				}
 
-				std::cout << dot.mVelY << std::endl;
+				os.str("");
+				os << dot.getVelocityX() << ", " << dot.getVelocityY();
+				if(!gTextVelocity.loadFromRenderedText(os.str(), textColor)) {
+					printf("failed to render text texture\n");
+					quit = true;
+				}
 
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -551,7 +726,8 @@ int main(int argc, char *args[]) {
 				}
 
 				// Render font.
-				gTextTexture.render((SCREEN_WIDTH - gTextTexture.getWidth()),  0);
+				gTextCoordinates.render((SCREEN_WIDTH - gTextCoordinates.getWidth()),  0);
+				gTextVelocity.render((SCREEN_WIDTH - gTextVelocity.getWidth()),  30);
 
 				//Render dot
 				dot.render(camera);

@@ -46,3 +46,4 @@ extern bool checkCollision(SDL_Rect a, SDL_Rect b);
 extern LTexture gTileTexture;
 extern SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
 #endif
+
