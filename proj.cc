@@ -11,9 +11,6 @@
 #include "tiles.hpp"
 #include "particle.hpp"
 
-// Particle engine.
-const int TOTAL_PARTICLES = 15;
-
 //The window we'll be rendering to
 SDL_Window *gWindow;
 
@@ -514,6 +511,21 @@ bool setTiles(Tile *tiles[], std::string mapName) {
 
 		//Clip the sprite sheet
 		if(tilesLoaded) {
+			x = 0; y =0;
+			for(int i = 0; i < TOTAL_TILE_SPRITES; ++i) {
+				gTileClips[i].x = x;
+				gTileClips[i].y = y;
+				gTileClips[i].w = TILE_WIDTH;
+				gTileClips[i].h = TILE_HEIGHT;
+
+				x += TILE_WIDTH;
+				if(x >=  TILESHEET_WIDTH) {
+					x = 0;
+					y += TILE_HEIGHT;
+				}
+			}
+
+			/*
 			gTileClips[TILE_RED].x = 0;
 			gTileClips[TILE_RED].y = 0;
 			gTileClips[TILE_RED].w = TILE_WIDTH;
@@ -573,6 +585,7 @@ bool setTiles(Tile *tiles[], std::string mapName) {
 			gTileClips[TILE_BOTTOMRIGHT].y = 160;
 			gTileClips[TILE_BOTTOMRIGHT].w = TILE_WIDTH;
 			gTileClips[TILE_BOTTOMRIGHT].h = TILE_HEIGHT;
+			*/
 		}
 	}
 
@@ -587,7 +600,7 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	//Go through the tiles
 	for(int i = 0; i < TOTAL_TILES; ++i) {
 		//If the tile is a wall type tile
-		if((tiles[i]->getType() >= TILE_CENTER) && (tiles[i]->getType() <= TILE_TOPLEFT)) {
+		if(tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 12) {
 			//If the collision box touches the wall tile
 			if(checkCollision(box, tiles[i]->getBox())) {
 				return i;
@@ -639,10 +652,10 @@ int main(int argc, char *args[]) {
 					if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE) {
 						quit = true;
 					}
-					if(e.key.keysym.sym == SDLK_1) {
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_1) {
 						setTiles(tileSet, "lazy2.map");
 					}
-					if(e.key.keysym.sym == SDLK_2) {
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_2) {
 						setTiles(tileSet, "lazy.map");
 					}
 					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_3) {
