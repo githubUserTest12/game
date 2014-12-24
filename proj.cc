@@ -11,6 +11,130 @@
 #include "tiles.hpp"
 #include "particle.hpp"
 
+class LTimer {
+	public:
+		//Initializes variables
+		LTimer();
+
+		//The various clock actions
+		void start();
+		void stop();
+		void pause();
+		void unpause();
+
+		//Gets the timer's time
+		Uint32 getTicks();
+
+		//Checks the status of the timer
+		bool isStarted();
+		bool isPaused();
+
+	private:
+		//The clock time when the timer started
+		Uint32 mStartTicks;
+
+		//The ticks stored when the timer was paused
+		Uint32 mPausedTicks;
+
+		//The timer status
+		bool mPaused;
+		bool mStarted;
+};
+
+LTimer::LTimer() {
+	//Initialize the variables
+	mStartTicks = 0;
+	mPausedTicks = 0;
+
+	mPaused = false;
+	mStarted = false;
+}
+
+void LTimer::start() {
+	//Start the timer
+	mStarted = true;
+
+	//Unpause the timer
+	mPaused = false;
+
+	//Get the current clock time
+	mStartTicks = SDL_GetTicks();
+	mPausedTicks = 0;
+}
+
+void LTimer::stop() {
+	//Stop the timer
+	mStarted = false;
+
+	//Unpause the timer
+	mPaused = false;
+
+	//Clear tick variables
+	mStartTicks = 0;
+	mPausedTicks = 0;
+}
+
+void LTimer::pause() {
+	//If the timer is running and isn't already paused
+	if( mStarted && !mPaused )
+	{
+		//Pause the timer
+		mPaused = true;
+
+		//Calculate the paused ticks
+		mPausedTicks = SDL_GetTicks() - mStartTicks;
+		mStartTicks = 0;
+	}
+}
+
+void LTimer::unpause() {
+	//If the timer is running and paused
+	if( mStarted && mPaused )
+	{
+		//Unpause the timer
+		mPaused = false;
+
+		//Reset the starting ticks
+		mStartTicks = SDL_GetTicks() - mPausedTicks;
+
+		//Reset the paused ticks
+		mPausedTicks = 0;
+	}
+}
+
+Uint32 LTimer::getTicks() {
+	//The actual timer time
+	Uint32 time = 0;
+
+	//If the timer is running
+	if( mStarted )
+	{
+		//If the timer is paused
+		if( mPaused )
+		{
+			//Return the number of ticks when the timer was paused
+			time = mPausedTicks;
+		}
+		else
+		{
+			//Return the current time minus the start time
+			time = SDL_GetTicks() - mStartTicks;
+		}
+	}
+
+	return time;
+}
+
+bool LTimer::isStarted() {
+	//Timer is running and paused or unpaused
+	return mStarted;
+}
+
+bool LTimer::isPaused() {
+	//Timer is running and paused
+	return mPaused && mStarted;
+}
+
 //The window we'll be rendering to
 SDL_Window *gWindow;
 
@@ -41,8 +165,8 @@ class Dot {
 		static const int DOT_HEIGHT = 20;
 
 		//Maximum axis velocity of the dot
-		static const int DOT_VELY = 15;
-		static const int DOT_VELX = 10;
+		static const int DOT_VELY = 900; //15;
+		static const int DOT_VELX = 600; //10;
 
 		//Initializes the variables allocates particles.
 		Dot();
@@ -54,7 +178,7 @@ class Dot {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[]);
+		void move(Tile *tiles[], float timeStep);
 
 		//Centers the camera over the dot
 		void setCamera(SDL_Rect &camera);
@@ -66,6 +190,14 @@ class Dot {
 
 		inline SDL_Rect getBoxPosition() {
 			return mBox;
+		}
+
+		inline float getPosX() {
+			return mPosX;
+		}
+
+		inline float getPosY() {
+			return mPosY;
 		}
 
 		inline float getVelocityX() {
@@ -95,6 +227,7 @@ class Dot {
 
 		//Collision box of the dot
 		SDL_Rect mBox;
+		float mPosX, mPosY;
 
 		//The velocity of the dot
 		float mVelX, mVelY;
@@ -114,8 +247,11 @@ bool setTiles(Tile *tiles[], std::string mapName);
 
 Dot::Dot() {
 	//Initialize the collision box
+	mPosX = 0;
+	mPosY = 0;
+
 	mBox.x = 0;
-	mBox.y = LEVEL_HEIGHT;
+	mBox.y = 0;
 	mBox.w = DOT_WIDTH;
 	mBox.h = DOT_HEIGHT;
 	isJumping = false;
@@ -145,7 +281,7 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 			// Delete and replace dead particles.
 			if(particles[i]->isDead()) {
 				delete particles[i];
-				particles[i] = new Particle(getBoxPosition().x - camera.x, getBoxPosition().y - camera.y);
+				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y);
 			}
 		}
 
@@ -158,7 +294,7 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
 			// Delete and replace dead particles.
 			delete particles[i];
-			particles[i] = new Particle(getBoxPosition().x - camera.x, getBoxPosition().y - camera.y);
+			particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y);
 		}
 	}
 }
@@ -198,52 +334,60 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
-void Dot::move(Tile *tiles[]) {
+void Dot::move(Tile *tiles[], float timeStep) {
 
 	int tileTouched;
 
 	//Move the dot left or right
-	mBox.x += mVelX;
+	mPosX += mVelX * timeStep;
 
 	//If the dot went too far to the left or right or touched a wall
-	if((mBox.x < 0) || (mBox.x + DOT_WIDTH > LEVEL_WIDTH)) {
+	if((mPosX < 0) || (mPosX + DOT_WIDTH > LEVEL_WIDTH)) {
 		//move back
-		if(mBox.x < 0) mBox.x = 0;
-		else mBox.x = LEVEL_WIDTH - DOT_WIDTH;
+		if(mPosX < 0) {
+			mPosX = 0;
+		}
+		else {
+			mPosX = LEVEL_WIDTH - DOT_WIDTH;
+		}
 	}
+	mBox.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		mBox.x = tiles[tileTouched]->getBox().x - DOT_WIDTH;
+		mPosX = tiles[tileTouched]->getBox().x - DOT_WIDTH;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
-		mBox.x = tiles[tileTouched]->getBox().x + TILE_WIDTH;
+		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
+	mBox.x = mPosX;
 
 	//Move the dot up or down
-	mBox.y += mVelY;
+	mPosY += mVelY * timeStep;
 
 	//If the dot went too far up or down or touched a wall
-	if((mBox.y < 0) || (mBox.y + DOT_HEIGHT > LEVEL_HEIGHT)) {
-		if(mBox.y < 0) mBox.y = 0;
+	if((mPosY < 0) || (mPosY + DOT_HEIGHT > LEVEL_HEIGHT)) {
+		if(mPosY < 0) mPosY = 0;
 		else {
-			mBox.y = LEVEL_HEIGHT - DOT_HEIGHT;
+			mPosY = LEVEL_HEIGHT - DOT_HEIGHT;
 			isJumping = false;
 		}
 	} 
+	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
-		mBox.y = tiles[tileTouched]->getBox().y - DOT_HEIGHT;
+		mPosY = tiles[tileTouched]->getBox().y - DOT_HEIGHT;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {
-		mBox.y = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
+		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
+	mBox.y = mPosY;
 }
 
 void Dot::setCamera(SDL_Rect &camera) {
 	//Center the camera over the dot
-	camera.x =(mBox.x + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
-	camera.y =(mBox.y + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
+	camera.x =(mPosX + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
+	camera.y =(mPosY + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Keep the camera in bounds
 	if(camera.x < 0) {
@@ -262,7 +406,7 @@ void Dot::setCamera(SDL_Rect &camera) {
 
 void Dot::render(SDL_Rect &camera, bool toggleParticles) {
 	//Show the dot
-	gDotTexture.render(mBox.x - camera.x, mBox.y - camera.y);
+	gDotTexture.render(mPosX - camera.x, mPosY - camera.y);
 
 	// Show particles on top of dot.
 	renderParticles(camera, toggleParticles);
@@ -636,10 +780,13 @@ int main(int argc, char *args[]) {
 			//The dot that will be moving around on the screen
 			Dot dot;
 
+			// Timer.
+			LTimer stepTimer;
+
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-			float acceleration = 1.07;
+			float acceleration = (1.07 * 60);
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::ostringstream os;
@@ -666,6 +813,22 @@ int main(int argc, char *args[]) {
 					dot.handleEvent(e);
 				}
 
+				// Calculate time step.
+				float timeStep = stepTimer.getTicks() / 1000.f; //1.0;
+				std::cout << timeStep << std::endl;
+
+				// Gravity implementation.
+				if(dot.getVelocityY() < 900) {
+					dot.setVelocityY(dot.getVelocityY() + acceleration);
+				}
+				if(dot.getVelocityY() > 900) {
+					dot.setVelocityY(900);
+				}
+				if(dot.getVelocityY() < -1200) {
+					dot.setVelocityY(-1200);
+				}
+
+				/*
 				if(dot.getVelocityY() < 15) {
 					dot.setVelocityY(dot.getVelocityY() + acceleration);
 				}
@@ -675,10 +838,14 @@ int main(int argc, char *args[]) {
 				if(dot.getVelocityY() < -20) {
 					dot.setVelocityY(-20);
 				}
+				*/
 
-				//Move the dot
-				dot.move(tileSet);
+				//Move the dot.
+				dot.move(tileSet, timeStep);
 				dot.setCamera(camera);
+
+				// Restart step timer.
+				stepTimer.start();
 				
 				os.str("");
 				os << dot.getBoxPosition().x << ", " << dot.getBoxPosition().y;
