@@ -28,6 +28,7 @@ LTexture gTextVelocity;
 LTexture gTileTexture;
 SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
 
+LTexture gBGTexture;
 
 LTexture gRedTexture;
 LTexture gGreenTexture;
@@ -39,7 +40,7 @@ class Dot {
 	public:
 		//The dimensions of the dot
 
-		static const int DOT_WIDTH = 37;
+		static const int DOT_WIDTH = 38;
 		static const int DOT_HEIGHT = 55;
 		static const int ANIMATION_FRAMES = 4;
 		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * DOT_WIDTH;
@@ -157,7 +158,7 @@ Dot::Dot() {
 			spriteClips[i].w = DOT_WIDTH;
 			spriteClips[i].h = DOT_HEIGHT;
 
-			x += DOT_WIDTH;
+			x += DOT_WIDTH + 1;
 			if(x >=  SPRITESHEET_WIDTH) {
 				x = 0;
 				y += TILE_HEIGHT;
@@ -410,6 +411,12 @@ bool loadMedia(Tile *tiles[]) {
 	// Load shimmer texture.
 	if(!gShimmerTexture.loadFromFile("shimmer.bmp")) {
 		printf("failed to load shimmer texture\n");
+		success = false;
+	}
+
+	// Load background texture.
+	if(!gBGTexture.loadFromFile("gamebackground.png")) {
+		printf( "Failed to load background texture!\n" );
 		success = false;
 	}
 
@@ -721,6 +728,9 @@ int main(int argc, char *args[]) {
 			int frame = 0;
 			SDL_Rect *currentClip;
 
+			// Background scrolling offset.
+			int scrollingOffset = 0;
+
 			//While application is running
 			while(!quit) {
 				//Handle events on queue
@@ -738,6 +748,9 @@ int main(int argc, char *args[]) {
 					}
 					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_2) {
 						setTiles(tileSet, "lazy.map");
+					}
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_4) {
+						setTiles(tileSet, "lazy3.map");
 					}
 					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_3) {
 						toggleParticles = !toggleParticles;
@@ -777,6 +790,12 @@ int main(int argc, char *args[]) {
 				dot.move(tileSet, timeStep);
 				dot.setCamera(camera);
 
+				// Scroll background.
+				--scrollingOffset;
+				if(scrollingOffset < -gBGTexture.getWidth()) {
+					scrollingOffset = 0;
+				}
+
 				// Restart step timer.
 				stepTimer.start();
 				
@@ -797,6 +816,9 @@ int main(int argc, char *args[]) {
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
+
+				gBGTexture.render(scrollingOffset, 0);
+				gBGTexture.render(scrollingOffset + gBGTexture.getWidth(), 0);
 
 				//Render level
 				for(int i = 0; i < TOTAL_TILES; ++i) {
