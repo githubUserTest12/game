@@ -25,7 +25,6 @@ LTexture gFpsTextTexture;
 LTexture gTextVelocity;
 
 //Scene textures
-LTexture gDotTexture;
 LTexture gTileTexture;
 SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
 
@@ -39,8 +38,15 @@ LTexture gShimmerTexture;
 class Dot {
 	public:
 		//The dimensions of the dot
-		static const int DOT_WIDTH = 20;
-		static const int DOT_HEIGHT = 20;
+
+		static const int DOT_WIDTH = 37;
+		static const int DOT_HEIGHT = 55;
+		static const int ANIMATION_FRAMES = 4;
+		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * DOT_WIDTH;
+		//static const int SPRITESHEET_HEIGHT = 40;
+
+		LTexture dotTexture;
+		SDL_Rect spriteClips[ANIMATION_FRAMES];
 
 		//Maximum axis velocity of the dot
 		int DOT_VELY = 15 * SCREEN_FPS; // 15;
@@ -62,9 +68,11 @@ class Dot {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the dot on the screen
-		void render(SDL_Rect &camera, bool toggleParticles);
+		void render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip);
 
 		bool isJumping;
+		bool isMoving;
+		SDL_RendererFlip flip;
 
 		inline SDL_Rect getBoxPosition() {
 			return mBox;
@@ -133,6 +141,29 @@ Dot::Dot() {
 	mBox.w = DOT_WIDTH;
 	mBox.h = DOT_HEIGHT;
 	isJumping = false;
+	isMoving = false;
+	flip = SDL_FLIP_NONE;
+
+	//Load dot texture
+	if(!dotTexture.loadFromFile("character.png")) {
+		printf("Failed to load dot texture!\n");
+	}
+	else {
+		int x = 0; 
+		int y = 0;
+		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
+			spriteClips[i].x = x;
+			spriteClips[i].y = y;
+			spriteClips[i].w = DOT_WIDTH;
+			spriteClips[i].h = DOT_HEIGHT;
+
+			x += DOT_WIDTH;
+			if(x >=  SPRITESHEET_WIDTH) {
+				x = 0;
+				y += TILE_HEIGHT;
+			}
+		}
+	}
 
 	//Initialize the velocity
 	mVelX = 0;
@@ -140,7 +171,7 @@ Dot::Dot() {
 
 	// Initialize the particles.
 	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-		particles[i] = new Particle(getBoxPosition().x, getBoxPosition().y);
+		particles[i] = new Particle(mPosX, mPosY, mBox);
 	}
 
 }
@@ -156,10 +187,15 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 	if(toggleParticles) {
 		// Go through particles.
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			// Delete and replace dead particles.
+
 			if(particles[i]->isDead()) {
 				delete particles[i];
-				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y);
+				//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
+					//std::cout << "hit " << mPosX << std::endl;
+					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (DOT_WIDTH / 2), mPosY - camera.y);
+				//}
+				//else 
+				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
 			}
 		}
 
@@ -172,7 +208,7 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
 			// Delete and replace dead particles.
 			delete particles[i];
-			particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y);
+			particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
 		}
 	}
 }
@@ -190,8 +226,16 @@ void Dot::handleEvent(SDL_Event &e) {
 				}
 				break;
 			//case SDLK_DOWN: mVelY += DOT_VELY; break;
-			case SDLK_LEFT: mVelX -= DOT_VELX; break;
-			case SDLK_RIGHT: mVelX += DOT_VELX; break;
+			case SDLK_LEFT: 
+				isMoving = true;
+				flip = SDL_FLIP_NONE;
+				mVelX -= DOT_VELX; 
+				break;
+			case SDLK_RIGHT: 
+				isMoving = true;
+				flip = SDL_FLIP_HORIZONTAL;
+				mVelX += DOT_VELX; 
+				break;
 		}
 	}
 	//If a key was released
@@ -200,8 +244,8 @@ void Dot::handleEvent(SDL_Event &e) {
 		switch(e.key.keysym.sym) {
 			//case SDLK_SPACE: mVelY += DOT_VELY; break;
 			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
-			case SDLK_LEFT: mVelX += DOT_VELX; break;
-			case SDLK_RIGHT: mVelX -= DOT_VELX; break;
+			case SDLK_LEFT: isMoving = false; mVelX += DOT_VELX; break;
+			case SDLK_RIGHT: isMoving = false; mVelX -= DOT_VELX; break;
 		}
 	}
 }
@@ -264,8 +308,8 @@ void Dot::move(Tile *tiles[], float timeStep) {
 
 void Dot::setCamera(SDL_Rect &camera) {
 	//Center the camera over the dot
-	camera.x =(mPosX + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
-	camera.y =(mPosY + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
+	camera.x = (mPosX + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
+	camera.y = (mPosY + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Keep the camera in bounds
 	if(camera.x < 0) {
@@ -282,9 +326,9 @@ void Dot::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Dot::render(SDL_Rect &camera, bool toggleParticles) {
+void Dot::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the dot
-	gDotTexture.render(mPosX - camera.x, mPosY - camera.y);
+	dotTexture.render(mPosX - camera.x, mPosY - camera.y, clip, 0, NULL, flip);
 
 	// Show particles on top of dot.
 	renderParticles(camera, toggleParticles);
@@ -344,12 +388,6 @@ bool init() {
 bool loadMedia(Tile *tiles[]) {
 	//Loading success flag
 	bool success = true;
-
-	//Load dot texture
-	if(!gDotTexture.loadFromFile("dot.bmp")) {
-		printf("Failed to load dot texture!\n");
-		success = false;
-	}
 
 	// Load red texture.
 	if(!gRedTexture.loadFromFile("red.bmp")) {
@@ -417,7 +455,6 @@ void close(Tile *tiles[]) {
 	gBlueTexture.free();
 	gGreenTexture.free();
 	gShimmerTexture.free();
-	gDotTexture.free();
 	gTileTexture.free();
 	gTextCoordinates.free();
 	gTextVelocity.free();
@@ -664,6 +701,7 @@ int main(int argc, char *args[]) {
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
+			float acceleration = 1.07 * SCREEN_FPS;
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::ostringstream os;
@@ -678,6 +716,10 @@ int main(int argc, char *args[]) {
 			// Start timer.
 			int countedFrames = 0;
 			fpsTimer.start();
+
+			// Current animation frame.
+			int frame = 0;
+			SDL_Rect *currentClip;
 
 			//While application is running
 			while(!quit) {
@@ -709,7 +751,6 @@ int main(int argc, char *args[]) {
 				float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
 				if(avgFPS > 2000000) avgFPS = 0;
 
-				float acceleration = 1.07 * avgFPS;
 
 				// Calculate time step.
 				float timeStep = stepTimer.getTicks() / 1000.f; //1.0;
@@ -722,13 +763,13 @@ int main(int argc, char *args[]) {
 				}
 
 				// Gravity implementation.
-				if(dot.getVelocityY() < 15 * avgFPS) {
+				if(dot.getVelocityY() < 15 * SCREEN_FPS) {
 					dot.setVelocityY(dot.getVelocityY() + acceleration);
 				}
-				if(dot.getVelocityY() > 15 * avgFPS) {
+				if(dot.getVelocityY() > 15 * SCREEN_FPS) {
 					dot.setVelocityY(15 * avgFPS);
 				}
-				if(dot.getVelocityY() < -20 * avgFPS) {
+				if(dot.getVelocityY() < -20 * SCREEN_FPS) {
 					dot.setVelocityY(-20 * avgFPS);
 				}
 
@@ -768,7 +809,15 @@ int main(int argc, char *args[]) {
 				gFpsTextTexture.render((SCREEN_WIDTH - gFpsTextTexture.getWidth()),  60);
 
 				//Render dot
-				dot.render(camera, toggleParticles);
+				if(dot.isMoving) 
+					currentClip = &dot.spriteClips[frame / dot.ANIMATION_FRAMES];
+				else currentClip = &dot.spriteClips[1];
+				dot.render(camera, toggleParticles, currentClip);
+				
+				// Next frame.
+				++frame;
+				// Cycle.
+				if(frame / dot.ANIMATION_FRAMES >= dot.ANIMATION_FRAMES) frame = 0;
 
 				//Update screen
 				SDL_RenderPresent(gRenderer);
@@ -781,6 +830,7 @@ int main(int argc, char *args[]) {
 					SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
 			}
+			dot.dotTexture.free();
 		}
 
 		//Free resources and close SDL
