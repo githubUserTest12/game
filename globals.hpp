@@ -58,5 +58,6 @@ extern LTexture gRedTexture;
 extern LTexture gGreenTexture;
 extern LTexture gBlueTexture;
 extern LTexture gShimmerTexture;
+
 #endif
 

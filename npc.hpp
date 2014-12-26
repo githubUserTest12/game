@@ -1,17 +1,30 @@
 #ifndef NPC_HPP
 	#define NPC_HPP
+#include <SDL.h>
+#include "tiles.hpp"
+#include "globals.hpp"
+#include "particle.hpp"
+
+extern int touchesWall(SDL_Rect box, Tile *tiles[]);
+
 class Npc {
 	public:
 		//The dimensions of the dot
-		static const int NPC_WIDTH = 20;
-		static const int NPC_HEIGHT = 20;
+		static const int NPC_WIDTH = 38;
+		static const int NPC_HEIGHT = 55;
+		static const int ANIMATION_FRAMES = 4;
+		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * NPC_WIDTH;
 
 		//Maximum axis velocity of the dot
 		int NPC_VELY = 15 * SCREEN_FPS; // 15;
 		int NPC_VELX = 10 * SCREEN_FPS; //10;
 
+		// Texture.
+		LTexture npcTexture;
+		SDL_Rect spriteClips[ANIMATION_FRAMES];
+
 		//Initializes the variables allocates particles.
-		Npc();
+		Npc(int x, int y);
 
 		// Deallocates particles.
 		~Npc();
@@ -20,19 +33,17 @@ class Npc {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], std::vector<SDL_Rect> &otherColliders, float timeStep);
-
-		// Collision boxes.
-		std::vector<SDL_Rect> &getColliders();
+		void move(Tile *tiles[], float timeStep);
 
 		//Centers the camera over the dot
 		//void setCamera(SDL_Rect &camera);
 
 		//Shows the dot on the screen
-		void render(SDL_Rect &camera, bool toggleParticles = false);
+		void render(SDL_Rect &camera, bool toggleParticles = false, SDL_Rect *clip = NULL);
 
 		bool isJumping;
 		bool isMoving;
+		SDL_RendererFlip flip;
 
 		inline SDL_Rect getBoxPosition() {
 			return mBox;

@@ -11,6 +11,7 @@
 #include "tiles.hpp"
 #include "particle.hpp"
 #include "timer.hpp"
+#include "npc.hpp"
 
 //The window we'll be rendering to
 SDL_Window *gWindow;
@@ -63,7 +64,7 @@ class Dot {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], float timeStep);
+		void move(Tile *tiles[], Npc &npc, float timeStep);
 
 		//Centers the camera over the dot
 		void setCamera(SDL_Rect &camera);
@@ -189,13 +190,18 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 		// Go through particles.
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
 
-			if(particles[i]->isDead()) {
-				delete particles[i];
-				//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
+			if(particles[i] != NULL) {
+				if(particles[i]->isDead()) {
+					delete particles[i];
+					//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
 					//std::cout << "hit " << mPosX << std::endl;
 					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (DOT_WIDTH / 2), mPosY - camera.y);
-				//}
-				//else 
+					//}
+					//else 
+					particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
+				}
+			}
+			else {
 				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
 			}
 		}
@@ -206,10 +212,10 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 		}
 	}
 	else {
+		// Delete and replace dead particles.
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			// Delete and replace dead particles.
 			delete particles[i];
-			particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
+			particles[i] = NULL;
 		}
 	}
 }
@@ -257,9 +263,11 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
-void Dot::move(Tile *tiles[], float timeStep) {
+int touchesNpc(SDL_Rect box, SDL_Rect npcBox);
 
-	int tileTouched;
+void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
+
+	int tileTouched, npcTouched;
 
 	//Move the dot left or right
 	mPosX += mVelX * timeStep;
@@ -282,6 +290,7 @@ void Dot::move(Tile *tiles[], float timeStep) {
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
+	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
 	mBox.x = mPosX;
 
 	//Move the dot up or down
@@ -617,6 +626,16 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	return -1;
 }
 
+int touchesNpc(SDL_Rect box, SDL_Rect npcBox) {
+	//Go through the npc
+	if(checkCollision(box, npcBox)) {
+		return 0;
+	}
+
+	//If no wall tiles were touched
+	return -1;
+}
+
 int main(int argc, char *args[]) {
 	//Start up SDL and create window
 	if(!init()) {
@@ -640,6 +659,7 @@ int main(int argc, char *args[]) {
 
 			//The dot that will be moving around on the screen
 			Dot dot;
+			Npc npc(LEVEL_WIDTH / 2, LEVEL_HEIGHT / 2);
 
 			// Timer.
 			LTimer stepTimer;
@@ -731,8 +751,19 @@ int main(int argc, char *args[]) {
 					dot.setVelocityY(-20 * avgFPS);
 				}
 
+				if(npc.getVelocityY() < 15 * SCREEN_FPS) {
+					npc.setVelocityY(npc.getVelocityY() + acceleration);
+				}
+				if(npc.getVelocityY() > 15 * SCREEN_FPS) {
+					npc.setVelocityY(15 * avgFPS);
+				}
+				if(npc.getVelocityY() < -20 * SCREEN_FPS) {
+					npc.setVelocityY(-20 * avgFPS);
+				}
+
 				//Move the dot.
-				dot.move(tileSet, timeStep);
+				dot.move(tileSet, npc, timeStep);
+				npc.move(tileSet, timeStep);
 				dot.setCamera(camera);
 
 				// Scroll background.
@@ -782,6 +813,7 @@ int main(int argc, char *args[]) {
 					currentClip = &dot.spriteClips[frame / dot.ANIMATION_FRAMES];
 				else currentClip = &dot.spriteClips[1];
 				dot.render(camera, toggleParticles, currentClip);
+				npc.render(camera, toggleParticles, currentClip);
 				
 				// Next frame.
 				++frame;
