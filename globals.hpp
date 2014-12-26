@@ -42,7 +42,7 @@ const int TILE_TOPLEFT = 11;
 
 const int TOTAL_PARTICLES = 15;
 
-const int TOTAL_NPCS = 4;
+const int TOTAL_NPCS = 100;
 
 // Button constants.
 const int BUTTON_WIDTH = 300;

@@ -238,13 +238,17 @@ void Dot::handleEvent(SDL_Event &e) {
 					mVelY -= DOT_VELY; 
 				}
 				break;
+			case SDLK_w: 
+				mVelY = 0;
+				mVelY -= DOT_VELY;
+				break;
 			//case SDLK_DOWN: mVelY += DOT_VELY; break;
-			case SDLK_LEFT: 
+			case SDLK_a: 
 				isMoving = true;
 				flip = SDL_FLIP_NONE;
 				mVelX -= DOT_VELX; 
 				break;
-			case SDLK_RIGHT: 
+			case SDLK_d: 
 				isMoving = true;
 				flip = SDL_FLIP_HORIZONTAL;
 				mVelX += DOT_VELX; 
@@ -257,8 +261,8 @@ void Dot::handleEvent(SDL_Event &e) {
 		switch(e.key.keysym.sym) {
 			//case SDLK_SPACE: mVelY += DOT_VELY; break;
 			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
-			case SDLK_LEFT: isMoving = false; mVelX += DOT_VELX; break;
-			case SDLK_RIGHT: isMoving = false; mVelX -= DOT_VELX; break;
+			case SDLK_a: isMoving = false; mVelX += DOT_VELX; break;
+			case SDLK_d: isMoving = false; mVelX -= DOT_VELX; break;
 		}
 	}
 }
@@ -711,7 +715,7 @@ restart:
 
 			//The dot that will be moving around on the screen
 			Dot dot;
-			Npc *npcContainer[TOTAL_NPCS];
+			Npc *npcContainer[TOTAL_NPCS] = {};
 			npcContainer[0] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
 			npcContainer[1] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png");
 			npcContainer[2] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character.png");
@@ -750,6 +754,7 @@ restart:
 			// Background scrolling offset.
 			int scrollingOffset = 0;
 
+			std::string randomGuy;
 			/*
 			SDL_Rect wholeScreenViewport;
 			wholeScreenViewport.x = 0;
@@ -806,8 +811,19 @@ restart:
 					}
 
 					if(e.type == SDL_MOUSEBUTTONDOWN) {
+						switch(rand() % 3) {
+							case 0:
+								randomGuy = "character.png";
+								break;
+							case 1:
+								randomGuy = "character2.png";
+								break;
+							case 2:
+								randomGuy = "character3.png";
+								break;
+						}
 						std::cout << "Hit!" << std::endl;
-						//npcContainer[contained++] = new Npc(LEVEL_WIDTH / 2, 0, "character2.png");
+						npcContainer[contained++] = new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy);
 					}
 
 					// input for the dot
@@ -966,9 +982,11 @@ restart:
 
         //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
 				// Render buttons.
+				/*
 				for(int i = 0; i < TOTAL_BUTTONS; ++i) {
 					gButtons[i].render();
 				}
+				*/
 
 				//Update screen
 				SDL_RenderPresent(gRenderer);
