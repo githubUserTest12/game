@@ -16,8 +16,8 @@ class Npc {
 		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * NPC_WIDTH;
 
 		//Maximum axis velocity of the dot
-		int NPC_VELY = 15 * SCREEN_FPS; // 15;
-		int NPC_VELX = 1 * SCREEN_FPS; //10;
+		int NPC_VELY = 15;
+		int NPC_VELX = 1;
 
 		// Texture.
 		LTexture npcTexture;

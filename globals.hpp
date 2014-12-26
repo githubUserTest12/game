@@ -27,18 +27,6 @@ const int TOTAL_TILE_SPRITES = 48;
 //The different tile sprites
 const int TILESHEET_WIDTH = 320;
 const int TILESHEET_HEIGHT = 960;
-const int TILE_RED = 0;
-const int TILE_GREEN = 1;
-const int TILE_BLUE = 2;
-const int TILE_CENTER = 3;
-const int TILE_TOP = 4;
-const int TILE_TOPRIGHT = 5;
-const int TILE_RIGHT = 6;
-const int TILE_BOTTOMRIGHT = 7;
-const int TILE_BOTTOM = 8;
-const int TILE_BOTTOMLEFT = 9;
-const int TILE_LEFT = 10;
-const int TILE_TOPLEFT = 11;
 
 const int TOTAL_PARTICLES = 15;
 
@@ -70,6 +58,8 @@ extern LTexture gShimmerTexture;
 extern LTexture gButtonSpriteSheetTexture;
 extern LButton gButtons[TOTAL_BUTTONS];
 extern SDL_Rect gSpriteClips[4];
+
+extern void log(std::string message);
 
 #endif
 
