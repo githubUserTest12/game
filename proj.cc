@@ -935,7 +935,7 @@ restart:
 
 				os.str("");
 				SDL_GetMouseState(&xMouse, &yMouse);
-				os << xMouse << ", " << yMouse;
+				os << xMouse << ", " << yMouse << ": " << contained;
 				if(!gMouseCoordinates.loadFromRenderedText(os.str(), textColor)) {
 					printf("failed to render text texture\n");
 					quit = true;
