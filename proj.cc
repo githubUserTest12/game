@@ -259,13 +259,13 @@ void Dot::handleEvent(SDL_Event &e, float avgFPS) {
 				break;
 			//case SDLK_DOWN: mVelY += DOT_VELY; break;
 			case SDLK_a: 
-				mVelX -= (int) (DOT_VELX * avgFPS); 
-				saveA = (int) (DOT_VELX * avgFPS);
+				mVelX -= DOT_VELX * avgFPS; 
+				saveA = DOT_VELX * avgFPS;
 				std::cout << "hit " <<  mVelX << std::endl;
 				break;
 			case SDLK_d: 
-				mVelX += (int) (DOT_VELX * avgFPS); 
-				saveB = (int) (DOT_VELX * avgFPS);
+				mVelX +=  DOT_VELX * avgFPS; 
+				saveB = DOT_VELX * avgFPS;
 				std::cout << "hit " <<  mVelX << std::endl;
 				break;
 		}
@@ -377,7 +377,7 @@ void Dot::setCamera(SDL_Rect &camera) {
 
 void Dot::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the dot
-	dotTexture.render((int) (mPosX - camera.x), (int) (mPosY - camera.y), clip, 0, NULL, flip);
+	dotTexture.render(mPosX - camera.x, mPosY - camera.y, clip, 0, NULL, flip);
 
 	// Show particles on top of dot.
 	renderParticles(camera, toggleParticles);
@@ -754,7 +754,7 @@ restart:
 			float timeStep;
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
-			std::ostringstream os;
+			std::stringstream os;
 
 			std::stringstream timeText;
 			// Frames per second timer.
@@ -855,7 +855,7 @@ restart:
 					}
 
 					// input for the dot
-					dot.handleEvent(e, avgFPS);
+					dot.handleEvent(e, (int) avgFPS);
 				}
 
 				Uint32 seconds = ticks / 1000.f;
@@ -957,24 +957,24 @@ restart:
 				log("preparing font info...");
 				os.str("");
 				os << dot.getBoxPosition().x << ", " << dot.getBoxPosition().y;
-				if(!gTextCoordinates.loadFromRenderedText(os.str(), textColor)) {
+				if(!gTextCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
+					log("error!");
 					printf("failed to render text texture\n");
-					quit = true;
 				}
 
 				os.str("");
 				os << dot.getVelocityX() << ", " << dot.getVelocityY();
-				if(!gTextVelocity.loadFromRenderedText(os.str(), textColor)) {
+				if(!gTextVelocity.loadFromRenderedText(os.str().c_str(), textColor)) {
+					log("error!");
 					printf("failed to render text texture\n");
-					quit = true;
 				}
 
 				os.str("");
 				SDL_GetMouseState(&xMouse, &yMouse);
 				os << xMouse << ", " << yMouse << ": " << contained;
-				if(!gMouseCoordinates.loadFromRenderedText(os.str(), textColor)) {
+				if(!gMouseCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
+					log("error!");
 					printf("failed to render text texture\n");
-					quit = true;
 				}
 
 				log("clearing screen...");
