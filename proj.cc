@@ -322,6 +322,7 @@ void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
 	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
 	if(npcTouched == 0 && mVelY > 0) {
 		mPosY = npc.getPosY() - DOT_HEIGHT;
+		isJumping = false;
 	}
 	if(npcTouched == 0 && mVelY < 0) {
 		mPosY = npc.getPosY() + npc.NPC_HEIGHT;
@@ -487,12 +488,15 @@ void close(Tile *tiles[]) {
 	gTileTexture.free();
 	gTextCoordinates.free();
 	gTextVelocity.free();
+	gBGTexture.free();
+	gFpsTextTexture.free();
 
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 	gRenderer = NULL;
+	gFont = NULL;
 
 	//Quit SDL subsystems
 	TTF_Quit();
@@ -627,7 +631,7 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	//Go through the tiles
 	for(int i = 0; i < TOTAL_TILES; ++i) {
 		//If the tile is a wall type tile
-		if(tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 12) {
+		if(tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 20) {
 			//If the collision box touches the wall tile
 			if(checkCollision(box, tiles[i]->getBox())) {
 				return i;
@@ -650,6 +654,9 @@ int touchesNpc(SDL_Rect box, SDL_Rect npcBox) {
 }
 
 int main(int argc, char *args[]) {
+	
+restart:
+	bool restart = false;
 	//Start up SDL and create window
 	if(!init()) {
 		printf("Failed to initialize!\n");
@@ -663,7 +670,7 @@ int main(int argc, char *args[]) {
 			printf("Failed to load media!\n");
 		}
 
-		else {	
+		else {
 			//Main loop flag
 			bool quit = false;
 
@@ -672,6 +679,9 @@ int main(int argc, char *args[]) {
 
 			//The dot that will be moving around on the screen
 			Dot dot;
+			Npc *npcContainer[TOTAL_NPCS];
+			npcContainer[0] = new Npc(LEVEL_WIDTH / 2, 0, "character2.png");
+			npcContainer[1] = new Npc(LEVEL_WIDTH / 2 - 100, 0, "character3.png");
 			Npc npc(LEVEL_WIDTH / 2, 0, "character2.png");
 			Npc npc2(LEVEL_WIDTH / 2 - 100, 0, "character3.png");
 
@@ -710,7 +720,7 @@ int main(int argc, char *args[]) {
 			npcTimer.start();
 
 			//While application is running
-			while(!quit) {
+			while(!quit && !restart) {
 
 				Uint32 ticks = SDL_GetTicks();
 
@@ -725,6 +735,9 @@ int main(int argc, char *args[]) {
 					//User requests quit
 					if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE) {
 						quit = true;
+					}
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_r) {
+						restart = true;
 					}
 					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_1) {
 						setTiles(tileSet, "lazy2.map");
@@ -908,10 +921,13 @@ int main(int argc, char *args[]) {
 				}
 			}
 			dot.dotTexture.free();
+			npc.npcTexture.free();
+			npc2.npcTexture.free();
 		}
 
 		//Free resources and close SDL
 		close(tileSet);
+		if(restart) goto restart;
 	}
 
 	return 0;
