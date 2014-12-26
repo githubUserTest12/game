@@ -12,6 +12,7 @@
 #include "particle.hpp"
 #include "timer.hpp"
 #include "npc.hpp"
+#include "button.hpp"
 
 //The window we'll be rendering to
 SDL_Window *gWindow;
@@ -24,6 +25,11 @@ TTF_Font *gFont = NULL;
 LTexture gTextCoordinates;
 LTexture gFpsTextTexture;
 LTexture gTextVelocity;
+LTexture gMouseCoordinates;
+
+LTexture gButtonSpriteSheetTexture;
+LButton gButtons[TOTAL_BUTTONS];
+SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
 //Scene textures
 LTexture gTileTexture;
@@ -64,7 +70,7 @@ class Dot {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], Npc &npc, float timeStep);
+		void move(Tile *tiles[], Npc *npc[], float timeStep);
 
 		//Centers the camera over the dot
 		void setCamera(SDL_Rect &camera);
@@ -263,9 +269,9 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
-int touchesNpc(SDL_Rect box, SDL_Rect npcBox);
+int touchesNpc(SDL_Rect box, Npc *npcContainer[]);
 
-void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
+void Dot::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 
 	int tileTouched, npcTouched;
 
@@ -290,12 +296,12 @@ void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
-	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
-	if(npcTouched == 0 && mVelX > 0) {
-		mPosX = npc.getPosX() - DOT_WIDTH;
+	npcTouched = touchesNpc(mBox, npcContainer);
+	if(npcTouched > -1 && mVelX > 0) {
+		mPosX = npcContainer[npcTouched]->getPosX() - DOT_WIDTH;
 	}
-	if(npcTouched == 0 && mVelX < 0) {
-		mPosX = npc.getPosX() + npc.NPC_WIDTH;
+	if(npcTouched > -1 && mVelX < 0) {
+		mPosX = npcContainer[npcTouched]->getPosX() + npcContainer[npcTouched]->NPC_WIDTH;
 	}
 	mBox.x = mPosX;
 
@@ -319,13 +325,13 @@ void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
-	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
-	if(npcTouched == 0 && mVelY > 0) {
-		mPosY = npc.getPosY() - DOT_HEIGHT;
+	npcTouched = touchesNpc(mBox, npcContainer);
+	if(npcTouched > -1 && mVelY > 0) {
+		mPosY = npcContainer[npcTouched]->getPosY() - DOT_HEIGHT;
 		isJumping = false;
 	}
-	if(npcTouched == 0 && mVelY < 0) {
-		mPosY = npc.getPosY() + npc.NPC_HEIGHT;
+	if(npcTouched > -1 && mVelY < 0) {
+		mPosY = npcContainer[npcTouched]->getPosY() + npcContainer[npcTouched]->NPC_HEIGHT;
 	}
 	mBox.y = mPosY;
 }
@@ -467,6 +473,26 @@ bool loadMedia(Tile *tiles[]) {
 		printf("failed to load font, error: %s\n", TTF_GetError());
 		success = false;
 	}
+	//Load sprites
+	if(!gButtonSpriteSheetTexture.loadFromFile("button.png"))
+	{
+		printf( "Failed to load button sprite texture!\n" );
+		success = false;
+	}
+	else
+	{
+		//Set sprites
+		for( int i = 0; i < BUTTON_SPRITE_TOTAL; ++i )
+		{
+			gSpriteClips[i].x = 0;
+			gSpriteClips[i].y = i * 200;
+			gSpriteClips[i].w = BUTTON_WIDTH;
+			gSpriteClips[i].h = BUTTON_HEIGHT;
+		}
+
+		//Set buttons in corners
+		gButtons[0].setPosition(gButtons[0].dstrect.x, gButtons[0].dstrect.y);
+	}
 
 	return success;
 }
@@ -488,8 +514,10 @@ void close(Tile *tiles[]) {
 	gTileTexture.free();
 	gTextCoordinates.free();
 	gTextVelocity.free();
+	gMouseCoordinates.free();
 	gBGTexture.free();
 	gFpsTextTexture.free();
+	gButtonSpriteSheetTexture.free();
 
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
@@ -643,10 +671,14 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	return -1;
 }
 
-int touchesNpc(SDL_Rect box, SDL_Rect npcBox) {
+int touchesNpc(SDL_Rect box, Npc *npcContainer[]) {
 	//Go through the npc
-	if(checkCollision(box, npcBox)) {
-		return 0;
+	for(int i = 0; i < TOTAL_NPCS; ++i) {
+		if(npcContainer[i] !=	NULL) {
+			if(checkCollision(box, npcContainer[i]->getBoxPosition())) {
+				return i;
+			}
+		}
 	}
 
 	//If no wall tiles were touched
@@ -680,10 +712,11 @@ restart:
 			//The dot that will be moving around on the screen
 			Dot dot;
 			Npc *npcContainer[TOTAL_NPCS];
-			npcContainer[0] = new Npc(LEVEL_WIDTH / 2, 0, "character2.png");
-			npcContainer[1] = new Npc(LEVEL_WIDTH / 2 - 100, 0, "character3.png");
-			Npc npc(LEVEL_WIDTH / 2, 0, "character2.png");
-			Npc npc2(LEVEL_WIDTH / 2 - 100, 0, "character3.png");
+			npcContainer[0] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
+			npcContainer[1] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png");
+			npcContainer[2] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character.png");
+			npcContainer[3] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
+			int contained = 4;
 
 			// Timer.
 			LTimer stepTimer;
@@ -717,6 +750,21 @@ restart:
 			// Background scrolling offset.
 			int scrollingOffset = 0;
 
+			/*
+			SDL_Rect wholeScreenViewport;
+			wholeScreenViewport.x = 0;
+			wholeScreenViewport.y = 0;
+			wholeScreenViewport.w = SCREEN_WIDTH;
+			wholeScreenViewport.h = SCREEN_HEIGHT;
+
+			SDL_Rect topLeftViewport;
+			topLeftViewport.x = 50;
+			topLeftViewport.y = 50;
+			topLeftViewport.w = 100;
+			topLeftViewport.h = 100;
+			*/
+
+			int xMouse, yMouse;
 			npcTimer.start();
 
 			//While application is running
@@ -752,6 +800,16 @@ restart:
 						toggleParticles = !toggleParticles;
 					}
 
+					// Handle button events.
+					for(int i = 0; i < TOTAL_BUTTONS; ++i) {
+						gButtons[i].handleEvent(&e);
+					}
+
+					if(e.type == SDL_MOUSEBUTTONDOWN) {
+						std::cout << "Hit!" << std::endl;
+						//npcContainer[contained++] = new Npc(LEVEL_WIDTH / 2, 0, "character2.png");
+					}
+
 					// input for the dot
 					dot.handleEvent(e);
 				}
@@ -784,68 +842,56 @@ restart:
 					dot.setVelocityY(-20 * avgFPS);
 				}
 
-				if(npc.getVelocityY() < 15 * SCREEN_FPS) {
-					npc.setVelocityY(npc.getVelocityY() + acceleration);
-				}
-				if(npc.getVelocityY() > 15 * SCREEN_FPS) {
-					npc.setVelocityY(15 * avgFPS);
-				}
-				if(npc.getVelocityY() < -20 * SCREEN_FPS) {
-					npc.setVelocityY(-20 * avgFPS);
-				}
-
-				if(npc2.getVelocityY() < 15 * SCREEN_FPS) {
-					npc2.setVelocityY(npc2.getVelocityY() + acceleration);
-				}
-				if(npc2.getVelocityY() > 15 * SCREEN_FPS) {
-					npc2.setVelocityY(15 * avgFPS);
-				}
-				if(npc2.getVelocityY() < -20 * SCREEN_FPS) {
-					npc2.setVelocityY(-20 * avgFPS);
+				for(int i = 0; i < TOTAL_NPCS; ++i) {
+					if(npcContainer[i] != NULL) {
+						if(npcContainer[i]->getVelocityY() < 15 * SCREEN_FPS) {
+							npcContainer[i]->setVelocityY(npcContainer[i]->getVelocityY() + acceleration);
+						}
+						if(npcContainer[i]->getVelocityY() > 15 * SCREEN_FPS) {
+							npcContainer[i]->setVelocityY(15 * avgFPS);
+						}
+						if(npcContainer[i]->getVelocityY() < -20 * SCREEN_FPS) {
+							npcContainer[i]->setVelocityY(-20 * avgFPS);
+						}
+					}
 				}
 
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
-					//std::cout << "hit " << npc.getVelocityX() << std::endl;
-					switch(rand() % 3) {
-						case 0:
-							npc2.isMoving = true;
-							npc2.setVelocityX(-npc2.NPC_VELX);
-							npc2.flip = SDL_FLIP_NONE;
-							break;
-						case 1:
-							npc2.isMoving = true;
-							npc2.setVelocityX(npc2.NPC_VELX);
-							npc2.flip = SDL_FLIP_HORIZONTAL;
-							break;
-						case 2:
-							npc2.isMoving = false;
-							npc2.setVelocityX(0);
-							break;
-					}
-					switch(rand() % 3) {
-						case 0:
-							npc.isMoving = true;
-							npc.setVelocityX(-npc.NPC_VELX);
-							npc.flip = SDL_FLIP_NONE;
-							break;
-						case 1:
-							npc.isMoving = true;
-							npc.setVelocityX(npc.NPC_VELX);
-							npc.flip = SDL_FLIP_HORIZONTAL;
-							break;
-						case 2:
-							npc.isMoving = false;
-							npc.setVelocityX(0);
-							break;
+					for(int i = 0; i < TOTAL_NPCS; ++i) {
+						if(npcContainer[i] != NULL) {
+							switch(rand() % 3) {
+								case 0:
+									npcContainer[i]->isMoving = true;
+									npcContainer[i]->setVelocityX(-npcContainer[i]->NPC_VELX);
+									npcContainer[i]->flip = SDL_FLIP_NONE;
+									break;
+								case 1:
+									npcContainer[i]->isMoving = true;
+									npcContainer[i]->setVelocityX(npcContainer[i]->NPC_VELX);
+									npcContainer[i]->flip = SDL_FLIP_HORIZONTAL;
+									break;
+								case 2:
+									npcContainer[i]->isMoving = false;
+									npcContainer[i]->setVelocityX(0);
+									break;
+							}
+						}
 					}
 					npcTimer.start();
 					
 				}
 
+        // Whole screen viewport.
+        //SDL_RenderSetViewport(gRenderer, &wholeScreenViewport);
+
 				//Move the dot.
-				dot.move(tileSet, npc, timeStep);
-				npc.move(tileSet, timeStep);
-				npc2.move(tileSet, timeStep);
+				dot.move(tileSet, npcContainer, timeStep);
+				for(int i = 0; i < TOTAL_NPCS; ++i) {
+					if(npcContainer[i] != NULL) {
+						npcContainer[i]->move(tileSet, timeStep);
+					}
+				}
+
 				dot.setCamera(camera);
 
 				// Scroll background.
@@ -871,6 +917,14 @@ restart:
 					quit = true;
 				}
 
+				os.str("");
+				SDL_GetMouseState(&xMouse, &yMouse);
+				os << xMouse << ", " << yMouse;
+				if(!gMouseCoordinates.loadFromRenderedText(os.str(), textColor)) {
+					printf("failed to render text texture\n");
+					quit = true;
+				}
+
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
@@ -887,6 +941,7 @@ restart:
 				gTextCoordinates.render((SCREEN_WIDTH - gTextCoordinates.getWidth()),  0);
 				gTextVelocity.render((SCREEN_WIDTH - gTextVelocity.getWidth()),  30);
 				gFpsTextTexture.render((SCREEN_WIDTH - gFpsTextTexture.getWidth()),  60);
+				gMouseCoordinates.render((SCREEN_WIDTH - gMouseCoordinates.getWidth()),  90);
 
 				//Render dot
 				//Uint32 sprite = seconds % 4;
@@ -896,18 +951,24 @@ restart:
 				else currentClip = &dot.spriteClips[1];
 				dot.render(camera, toggleParticles, currentClip);
 
-				if(npc.isMoving) currentClip = &npc.spriteClips[frame / npc.ANIMATION_FRAMES];
-				else currentClip = &npc.spriteClips[1]; 
-				npc.render(camera, toggleParticles, currentClip);
-				
-				if(npc2.isMoving) currentClip = &npc2.spriteClips[frame / npc2.ANIMATION_FRAMES];
-				else currentClip = &npc2.spriteClips[1]; 
-				npc2.render(camera, toggleParticles, currentClip);
+				for(int i = 0; i < TOTAL_NPCS; ++i) {
+					if(npcContainer[i] != NULL) {
+						if(npcContainer[i]->isMoving) currentClip = &npcContainer[i]->spriteClips[frame / npcContainer[i]->ANIMATION_FRAMES];
+						else currentClip = &npcContainer[i]->spriteClips[1]; 
+						npcContainer[i]->render(camera, toggleParticles, currentClip);
+					}
+				}
 				
 				// Next frame.
 				++frame;
 				// Cycle.
 				if(frame / dot.ANIMATION_FRAMES >= dot.ANIMATION_FRAMES) frame = 0;
+
+        //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
+				// Render buttons.
+				for(int i = 0; i < TOTAL_BUTTONS; ++i) {
+					gButtons[i].render();
+				}
 
 				//Update screen
 				SDL_RenderPresent(gRenderer);
@@ -921,8 +982,11 @@ restart:
 				}
 			}
 			dot.dotTexture.free();
-			npc.npcTexture.free();
-			npc2.npcTexture.free();
+			for(int i = 0; i < TOTAL_NPCS; ++i) {
+				if(npcContainer[i] != NULL) {
+					npcContainer[i]->npcTexture.free();
+				}
+			}
 		}
 
 		//Free resources and close SDL

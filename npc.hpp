@@ -43,6 +43,7 @@ class Npc {
 
 		bool isJumping;
 		bool isMoving;
+		bool isDead;
 		SDL_RendererFlip flip;
 
 		inline SDL_Rect getBoxPosition() {

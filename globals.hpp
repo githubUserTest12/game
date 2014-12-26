@@ -5,6 +5,7 @@
 #include "texture.hpp"
 
 class LTexture;
+class LButton;
 
 const int SCREEN_WIDTH = 1024;
 const int SCREEN_HEIGHT = 768;
@@ -41,7 +42,12 @@ const int TILE_TOPLEFT = 11;
 
 const int TOTAL_PARTICLES = 15;
 
-const int TOTAL_NPCS = 2;
+const int TOTAL_NPCS = 4;
+
+// Button constants.
+const int BUTTON_WIDTH = 300;
+const int BUTTON_HEIGHT = 200;
+const int TOTAL_BUTTONS = 1;
 
 //The window we'll be rendering to
 extern SDL_Window *gWindow;
@@ -60,6 +66,10 @@ extern LTexture gRedTexture;
 extern LTexture gGreenTexture;
 extern LTexture gBlueTexture;
 extern LTexture gShimmerTexture;
+
+extern LTexture gButtonSpriteSheetTexture;
+extern LButton gButtons[TOTAL_BUTTONS];
+extern SDL_Rect gSpriteClips[4];
 
 #endif
 

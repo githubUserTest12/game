@@ -3,6 +3,7 @@
 //Texture wrapper class
 
 #include <string>
+#include <SDL.h>
 #include "globals.hpp"
 class LTexture {
 	public:
@@ -34,6 +35,7 @@ class LTexture {
 
 		//Renders texture at given point
 		void render(int x, int y, SDL_Rect *clip = NULL, double angle = 0.0, SDL_Point *center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
+		void render(int x, int y, SDL_Rect *clip, SDL_Rect &dstrect, double angle = 0.0, SDL_Point *center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
 
 		//Gets image dimensions
 		int getWidth();
