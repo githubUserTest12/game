@@ -135,7 +135,7 @@ bool setTiles(Tile *tiles[], std::string mapName);
 
 Dot::Dot() {
 	//Initialize the collision box
-	mPosX = 0;
+	mPosX = DOT_WIDTH + TILE_WIDTH;
 	mPosY = 0;
 
 	mBox.x = 0;
@@ -291,6 +291,12 @@ void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
+	if(npcTouched == 0 && mVelX > 0) {
+		mPosX = npc.getPosX() - DOT_WIDTH;
+	}
+	if(npcTouched == 0 && mVelX < 0) {
+		mPosX = npc.getPosX() + npc.NPC_WIDTH;
+	}
 	mBox.x = mPosX;
 
 	//Move the dot up or down
@@ -312,6 +318,13 @@ void Dot::move(Tile *tiles[], Npc &npc, float timeStep) {
 	}
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
+	}
+	npcTouched = touchesNpc(mBox, npc.getBoxPosition());
+	if(npcTouched == 0 && mVelY > 0) {
+		mPosY = npc.getPosY() - DOT_HEIGHT;
+	}
+	if(npcTouched == 0 && mVelY < 0) {
+		mPosY = npc.getPosY() + npc.NPC_HEIGHT;
 	}
 	mBox.y = mPosY;
 }
@@ -659,7 +672,8 @@ int main(int argc, char *args[]) {
 
 			//The dot that will be moving around on the screen
 			Dot dot;
-			Npc npc(LEVEL_WIDTH / 2, LEVEL_HEIGHT / 2);
+			Npc npc(LEVEL_WIDTH / 2, 0, "character2.png");
+			Npc npc2(LEVEL_WIDTH / 2 - 100, 0, "character3.png");
 
 			// Timer.
 			LTimer stepTimer;
@@ -679,6 +693,9 @@ int main(int argc, char *args[]) {
 			// Frames per second cap timer.
 			LTimer capTimer;
 
+			// Npc timer.
+			LTimer npcTimer;
+
 			// Start timer.
 			int countedFrames = 0;
 			fpsTimer.start();
@@ -690,17 +707,20 @@ int main(int argc, char *args[]) {
 			// Background scrolling offset.
 			int scrollingOffset = 0;
 
+			npcTimer.start();
+
 			//While application is running
 			while(!quit) {
 
 				Uint32 ticks = SDL_GetTicks();
 
+				// Start cap timer.
+				capTimer.start();
+
+
 				//Handle events on queue
 
 				while(SDL_PollEvent(&e) != 0) {
-
-					// Start cap timer.
-					capTimer.start();
 
 					//User requests quit
 					if(e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE) {
@@ -761,9 +781,58 @@ int main(int argc, char *args[]) {
 					npc.setVelocityY(-20 * avgFPS);
 				}
 
+				if(npc2.getVelocityY() < 15 * SCREEN_FPS) {
+					npc2.setVelocityY(npc2.getVelocityY() + acceleration);
+				}
+				if(npc2.getVelocityY() > 15 * SCREEN_FPS) {
+					npc2.setVelocityY(15 * avgFPS);
+				}
+				if(npc2.getVelocityY() < -20 * SCREEN_FPS) {
+					npc2.setVelocityY(-20 * avgFPS);
+				}
+
+				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
+					//std::cout << "hit " << npc.getVelocityX() << std::endl;
+					switch(rand() % 3) {
+						case 0:
+							npc2.isMoving = true;
+							npc2.setVelocityX(-npc2.NPC_VELX);
+							npc2.flip = SDL_FLIP_NONE;
+							break;
+						case 1:
+							npc2.isMoving = true;
+							npc2.setVelocityX(npc2.NPC_VELX);
+							npc2.flip = SDL_FLIP_HORIZONTAL;
+							break;
+						case 2:
+							npc2.isMoving = false;
+							npc2.setVelocityX(0);
+							break;
+					}
+					switch(rand() % 3) {
+						case 0:
+							npc.isMoving = true;
+							npc.setVelocityX(-npc.NPC_VELX);
+							npc.flip = SDL_FLIP_NONE;
+							break;
+						case 1:
+							npc.isMoving = true;
+							npc.setVelocityX(npc.NPC_VELX);
+							npc.flip = SDL_FLIP_HORIZONTAL;
+							break;
+						case 2:
+							npc.isMoving = false;
+							npc.setVelocityX(0);
+							break;
+					}
+					npcTimer.start();
+					
+				}
+
 				//Move the dot.
 				dot.move(tileSet, npc, timeStep);
 				npc.move(tileSet, timeStep);
+				npc2.move(tileSet, timeStep);
 				dot.setCamera(camera);
 
 				// Scroll background.
@@ -813,7 +882,14 @@ int main(int argc, char *args[]) {
 					currentClip = &dot.spriteClips[frame / dot.ANIMATION_FRAMES];
 				else currentClip = &dot.spriteClips[1];
 				dot.render(camera, toggleParticles, currentClip);
+
+				if(npc.isMoving) currentClip = &npc.spriteClips[frame / npc.ANIMATION_FRAMES];
+				else currentClip = &npc.spriteClips[1]; 
 				npc.render(camera, toggleParticles, currentClip);
+				
+				if(npc2.isMoving) currentClip = &npc2.spriteClips[frame / npc2.ANIMATION_FRAMES];
+				else currentClip = &npc2.spriteClips[1]; 
+				npc2.render(camera, toggleParticles, currentClip);
 				
 				// Next frame.
 				++frame;

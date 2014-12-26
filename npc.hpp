@@ -17,14 +17,14 @@ class Npc {
 
 		//Maximum axis velocity of the dot
 		int NPC_VELY = 15 * SCREEN_FPS; // 15;
-		int NPC_VELX = 10 * SCREEN_FPS; //10;
+		int NPC_VELX = 1 * SCREEN_FPS; //10;
 
 		// Texture.
 		LTexture npcTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 
 		//Initializes the variables allocates particles.
-		Npc(int x, int y);
+		Npc(int x, int y, std::string filename);
 
 		// Deallocates particles.
 		~Npc();
