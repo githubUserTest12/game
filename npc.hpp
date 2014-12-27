@@ -3,7 +3,6 @@
 #include <SDL.h>
 #include "tiles.hpp"
 #include "globals.hpp"
-#include "particle.hpp"
 
 extern int touchesWall(SDL_Rect box, Tile *tiles[]);
 
@@ -23,7 +22,7 @@ class Npc {
 		LTexture npcTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 
-		//Initializes the variables allocates particles.
+		//Initializes the variables, allocates particles.
 		Npc(int x, int y, std::string filename);
 
 		// Deallocates particles.
@@ -78,10 +77,10 @@ class Npc {
 	private:
 
 		// Particles.
-		Particle *particles[TOTAL_PARTICLES];
+		//Particle *particles[TOTAL_PARTICLES];
 
 		// Render particles.
-		void renderParticles(SDL_Rect &camera, bool toggleParticles);
+		//void renderParticles(SDL_Rect &camera, bool toggleParticles);
 
 		//Collision box of the dot
 		SDL_Rect mBox;

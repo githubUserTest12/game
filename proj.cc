@@ -71,9 +71,7 @@ class Dot {
 		//Maximum axis velocity of the dot
 		const int DOT_VELY = 15; // * SCREEN_FPS; // 15;
 		const int DOT_VELX = 10; // * SCREEN_FPS; //10;
-		// float fps save.
-		float saveA;
-		float saveB;
+		const int GRAVITY_CONSTANT = 60;
 
 		//Initializes the variables allocates particles.
 		Dot();
@@ -82,7 +80,7 @@ class Dot {
 		~Dot();
 
 		//Takes key presses and adjusts the dot's velocity
-		void handleEvent(SDL_Event &e, float avgFPS);
+		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
 		void move(Tile *tiles[], Npc *npc[], float timeStep);
@@ -241,32 +239,32 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 	}
 }
 
-void Dot::handleEvent(SDL_Event &e, float avgFPS) {
+void Dot::handleEvent(SDL_Event &e) {
 	//If a key was pressed
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
 			case SDLK_SPACE: 
-				if(!isJumping) {
-					isJumping = true;
-					mVelY = 0; 
-					mVelY -= DOT_VELY * avgFPS; 
-				}
+				//if(!isJumping) {
+				mVelY = 0; 
+				mVelY -= DOT_VELY; 
+				//std::cout << mVelY << std::endl;
+				//}
 				break;
 			case SDLK_w: 
-				mVelY = 0;
-				mVelY -= DOT_VELY * avgFPS;
+				mVelY -= DOT_VELY;
+				//std::cout << mVelY << std::endl;
+				break;
+			case SDLK_s: 
+				mVelY += DOT_VELY;
+				//std::cout << mVelY << std::endl;
 				break;
 			//case SDLK_DOWN: mVelY += DOT_VELY; break;
 			case SDLK_a: 
-				mVelX -= DOT_VELX * avgFPS; 
-				saveA = DOT_VELX * avgFPS;
-				std::cout << "hit " <<  mVelX << std::endl;
+				mVelX -= DOT_VELX; 
 				break;
 			case SDLK_d: 
-				mVelX +=  DOT_VELX * avgFPS; 
-				saveB = DOT_VELX * avgFPS;
-				std::cout << "hit " <<  mVelX << std::endl;
+				mVelX +=  DOT_VELX; 
 				break;
 		}
 	}
@@ -274,10 +272,11 @@ void Dot::handleEvent(SDL_Event &e, float avgFPS) {
 	else if(e.type == SDL_KEYUP && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
-			//case SDLK_SPACE: mVelY += DOT_VELY; break;
+			case SDLK_w: mVelY += DOT_VELY; break;
+			case SDLK_s: mVelY -= DOT_VELY; break;
 			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
-			case SDLK_a: mVelX += saveA; std::cout << "hit " <<  mVelX << std::endl; break; 
-			case SDLK_d: mVelX -= saveB; std::cout << "hit " <<  mVelX << std::endl; break; 
+			case SDLK_a: mVelX += DOT_VELX; break; 
+			case SDLK_d: mVelX -= DOT_VELX; break; 
 		}
 	}
 }
@@ -377,7 +376,7 @@ void Dot::setCamera(SDL_Rect &camera) {
 
 void Dot::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the dot
-	dotTexture.render(mPosX - camera.x, mPosY - camera.y, clip, 0, NULL, flip);
+	dotTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
 
 	// Show particles on top of dot.
 	renderParticles(camera, toggleParticles);
@@ -749,7 +748,7 @@ restart:
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-			float acceleration;
+			float acceleration = 1.07;
 			float avgFPS;
 			float timeStep;
 			bool toggleParticles = true;
@@ -800,6 +799,9 @@ restart:
 			log("beginning main loop...");
 			//While application is running
 			while(!quit && !restart) {
+				// introduce lag.
+				//system("./clear.sh");
+
 
 				ticks = SDL_GetTicks();
 
@@ -850,12 +852,11 @@ restart:
 								randomGuy = "character3.png";
 								break;
 						}
-						std::cout << "Hit!" << std::endl;
 						npcContainer[contained++] = new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy);
 					}
 
 					// input for the dot
-					dot.handleEvent(e, (int) avgFPS);
+					dot.handleEvent(e);
 				}
 
 				Uint32 seconds = ticks / 1000.f;
@@ -868,8 +869,6 @@ restart:
 				avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
 				if(avgFPS > 2000000) avgFPS = 0;
 
-				acceleration = 1.07 * avgFPS;
-
 				// Calculate time step.
 				timeStep = stepTimer.getTicks() / 1000.f; //1.0;
 
@@ -881,26 +880,20 @@ restart:
 				}
 
 				// Gravity implementation.
-				if(dot.getVelocityY() < 15 * avgFPS) {
+				if(dot.getVelocityY() < 15) {
 					dot.setVelocityY(dot.getVelocityY() + acceleration);
 				}
-				if(dot.getVelocityY() > 15 * avgFPS) {
-					dot.setVelocityY(15 * avgFPS);
-				}
-				if(dot.getVelocityY() < -20 * avgFPS) {
-					dot.setVelocityY(-20 * avgFPS);
+				if(dot.getVelocityY() > 15) {
+					dot.setVelocityY(15);
 				}
 
 				for(int i = 0; i < TOTAL_NPCS; ++i) {
 					if(npcContainer[i] != NULL) {
-						if(npcContainer[i]->getVelocityY() < 15 * avgFPS) {
+						if(npcContainer[i]->getVelocityY() < 15) {
 							npcContainer[i]->setVelocityY(npcContainer[i]->getVelocityY() + acceleration);
 						}
-						if(npcContainer[i]->getVelocityY() > 15 * avgFPS) {
-							npcContainer[i]->setVelocityY(15 * avgFPS);
-						}
-						if(npcContainer[i]->getVelocityY() < -20 * avgFPS) {
-							npcContainer[i]->setVelocityY(-20 * avgFPS);
+						if(npcContainer[i]->getVelocityY() > 15) {
+							npcContainer[i]->setVelocityY(15);
 						}
 					}
 				}
@@ -911,12 +904,12 @@ restart:
 							switch(rand() % 3) {
 								case 0:
 									npcContainer[i]->isMoving = true;
-									npcContainer[i]->setVelocityX(-npcContainer[i]->NPC_VELX * avgFPS);
+									npcContainer[i]->setVelocityX(-npcContainer[i]->NPC_VELX);
 									npcContainer[i]->flip = SDL_FLIP_NONE;
 									break;
 								case 1:
 									npcContainer[i]->isMoving = true;
-									npcContainer[i]->setVelocityX(npcContainer[i]->NPC_VELX * avgFPS);
+									npcContainer[i]->setVelocityX(npcContainer[i]->NPC_VELX);
 									npcContainer[i]->flip = SDL_FLIP_HORIZONTAL;
 									break;
 								case 2:
@@ -935,10 +928,10 @@ restart:
 
 				//Move the dot.
 				log("moving character...");
-				dot.move(tileSet, npcContainer, timeStep);
+				dot.move(tileSet, npcContainer, 1);
 				for(int i = 0; i < TOTAL_NPCS; ++i) {
 					if(npcContainer[i] != NULL) {
-						npcContainer[i]->move(tileSet, timeStep);
+						npcContainer[i]->move(tileSet, 1);
 					}
 				}
 
@@ -1046,9 +1039,6 @@ restart:
 					// Wait remaining time.
 					SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
-
-				// introduce lag.
-				//system("./clear.sh");
 
 			}
 			log("freeing...");
