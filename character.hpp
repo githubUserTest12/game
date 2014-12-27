@@ -1,49 +1,48 @@
-#ifndef NPC_HPP
-	#define NPC_HPP
-#include <SDL.h>
-#include "tiles.hpp"
+#ifndef CHARACTER_HPP
+	#define CHARACTER_HPP
 #include "globals.hpp"
-#include "texture.hpp"
+#include "tiles.hpp"
+#include "npc.hpp"
+#include "particle.hpp"
 
-extern int touchesWall(SDL_Rect box, Tile *tiles[]);
-
-class Npc {
+class Dot {
 	public:
 		//The dimensions of the dot
-		static const int NPC_WIDTH = 38;
-		static const int NPC_HEIGHT = 55;
+
+		static const int DOT_WIDTH = 38;
+		static const int DOT_HEIGHT = 55;
 		static const int ANIMATION_FRAMES = 4;
-		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * NPC_WIDTH;
+		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * DOT_WIDTH;
+		//static const int SPRITESHEET_HEIGHT = 40;
 
-		//Maximum axis velocity of the dot
-		int NPC_VELY = 15;
-		int NPC_VELX = 1;
-
-		// Texture.
-		LTexture npcTexture;
+		LTexture dotTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 
-		//Initializes the variables, allocates particles.
-		Npc(int x, int y, std::string filename);
+		//Maximum axis velocity of the dot
+		const int DOT_VELY = 15; // * SCREEN_FPS; // 15;
+		const int DOT_VELX = 10; // * SCREEN_FPS; //10;
+		const int GRAVITY_CONSTANT = 60;
+
+		//Initializes the variables allocates particles.
+		Dot();
 
 		// Deallocates particles.
-		~Npc();
+		~Dot();
 
 		//Takes key presses and adjusts the dot's velocity
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], float timeStep);
+		void move(Tile *tiles[], Npc *npc[], float timeStep);
 
 		//Centers the camera over the dot
-		//void setCamera(SDL_Rect &camera);
+		void setCamera(SDL_Rect &camera);
 
 		//Shows the dot on the screen
-		void render(SDL_Rect &camera, bool toggleParticles = false, SDL_Rect *clip = NULL);
+		void render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip);
 
 		bool isJumping;
 		bool isMoving;
-		bool isDead;
 		SDL_RendererFlip flip;
 
 		inline SDL_Rect getBoxPosition() {
@@ -78,10 +77,10 @@ class Npc {
 	private:
 
 		// Particles.
-		//Particle *particles[TOTAL_PARTICLES];
+		Particle *particles[TOTAL_PARTICLES];
 
 		// Render particles.
-		//void renderParticles(SDL_Rect &camera, bool toggleParticles);
+		void renderParticles(SDL_Rect &camera, bool toggleParticles);
 
 		//Collision box of the dot
 		SDL_Rect mBox;
@@ -90,4 +89,5 @@ class Npc {
 		//The velocity of the dot
 		float mVelX, mVelY;
 };
+
 #endif

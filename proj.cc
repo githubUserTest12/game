@@ -6,13 +6,14 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "globals.hpp"
+#include "npc.hpp"
 #include "texture.hpp"
 #include "tiles.hpp"
 #include "particle.hpp"
 #include "timer.hpp"
-#include "npc.hpp"
 #include "button.hpp"
+#include "character.hpp"
+#include "globals.hpp"
 
 //The window we'll be rendering to
 SDL_Window *gWindow;
@@ -55,91 +56,6 @@ void log(std::string message) {
 }
 
 //The dot that will move around on the screen
-class Dot {
-	public:
-		//The dimensions of the dot
-
-		static const int DOT_WIDTH = 38;
-		static const int DOT_HEIGHT = 55;
-		static const int ANIMATION_FRAMES = 4;
-		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * DOT_WIDTH;
-		//static const int SPRITESHEET_HEIGHT = 40;
-
-		LTexture dotTexture;
-		SDL_Rect spriteClips[ANIMATION_FRAMES];
-
-		//Maximum axis velocity of the dot
-		const int DOT_VELY = 15; // * SCREEN_FPS; // 15;
-		const int DOT_VELX = 10; // * SCREEN_FPS; //10;
-		const int GRAVITY_CONSTANT = 60;
-
-		//Initializes the variables allocates particles.
-		Dot();
-
-		// Deallocates particles.
-		~Dot();
-
-		//Takes key presses and adjusts the dot's velocity
-		void handleEvent(SDL_Event &e);
-
-		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], Npc *npc[], float timeStep);
-
-		//Centers the camera over the dot
-		void setCamera(SDL_Rect &camera);
-
-		//Shows the dot on the screen
-		void render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip);
-
-		bool isJumping;
-		bool isMoving;
-		SDL_RendererFlip flip;
-
-		inline SDL_Rect getBoxPosition() {
-			return mBox;
-		}
-
-		inline float getPosX() {
-			return mPosX;
-		}
-
-		inline float getPosY() {
-			return mPosY;
-		}
-
-		inline float getVelocityX() {
-			return mVelX;
-		}
-
-		inline float getVelocityY() {
-			return mVelY;
-		}
-
-		inline void setVelocityX(float velocity) {
-			mVelX = velocity;
-		}
-
-		inline void setVelocityY(float velocity) {
-			mVelY = velocity;
-		}
-
-
-	private:
-
-		// Particles.
-		Particle *particles[TOTAL_PARTICLES];
-
-		// Render particles.
-		void renderParticles(SDL_Rect &camera, bool toggleParticles);
-
-		//Collision box of the dot
-		SDL_Rect mBox;
-		float mPosX, mPosY;
-
-		//The velocity of the dot
-		float mVelX, mVelY;
-};
-
 //Starts up SDL and creates window
 bool init();
 
@@ -152,135 +68,6 @@ void close(Tile *tiles[]);
 //Sets tiles from tile map
 bool setTiles(Tile *tiles[], std::string mapName);
 
-Dot::Dot() {
-	//Initialize the collision box
-	mPosX = DOT_WIDTH + TILE_WIDTH;
-	mPosY = 0;
-
-	mBox.x = 0;
-	mBox.y = 0;
-	mBox.w = DOT_WIDTH;
-	mBox.h = DOT_HEIGHT;
-	isJumping = false;
-	isMoving = false;
-	flip = SDL_FLIP_NONE;
-
-	//Load dot texture
-	if(!dotTexture.loadFromFile("character.png")) {
-		printf("Failed to load dot texture!\n");
-	}
-	else {
-		int x = 0; 
-		int y = 0;
-		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
-			spriteClips[i].x = x;
-			spriteClips[i].y = y;
-			spriteClips[i].w = DOT_WIDTH;
-			spriteClips[i].h = DOT_HEIGHT;
-
-			x += DOT_WIDTH + 1;
-			if(x >=  SPRITESHEET_WIDTH) {
-				x = 0;
-				y += TILE_HEIGHT;
-			}
-		}
-	}
-
-	//Initialize the velocity
-	mVelX = 0;
-	mVelY = 0;
-
-	// Initialize the particles.
-	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-		particles[i] = new Particle(mPosX, mPosY, mBox);
-	}
-
-}
-
-Dot::~Dot() {
-	// Delete particles.
-	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-		delete particles[i];
-	}
-}
-
-void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
-	if(toggleParticles) {
-		// Go through particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-
-			if(particles[i] != NULL) {
-				if(particles[i]->isDead()) {
-					delete particles[i];
-					//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
-					//std::cout << "hit " << mPosX << std::endl;
-					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (DOT_WIDTH / 2), mPosY - camera.y);
-					//}
-					//else 
-					particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
-				}
-			}
-			else {
-				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
-			}
-		}
-
-		// Show particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			particles[i]->render();
-		}
-	}
-	else {
-		// Delete and replace dead particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			delete particles[i];
-			particles[i] = NULL;
-		}
-	}
-}
-
-void Dot::handleEvent(SDL_Event &e) {
-	//If a key was pressed
-	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
-		//Adjust the velocity
-		switch(e.key.keysym.sym) {
-			case SDLK_SPACE: 
-				//if(!isJumping) {
-				mVelY = 0; 
-				mVelY -= DOT_VELY; 
-				//std::cout << mVelY << std::endl;
-				//}
-				break;
-			case SDLK_w: 
-				mVelY -= DOT_VELY;
-				//std::cout << mVelY << std::endl;
-				break;
-			case SDLK_s: 
-				mVelY += DOT_VELY;
-				//std::cout << mVelY << std::endl;
-				break;
-			//case SDLK_DOWN: mVelY += DOT_VELY; break;
-			case SDLK_a: 
-				mVelX -= DOT_VELX; 
-				break;
-			case SDLK_d: 
-				mVelX +=  DOT_VELX; 
-				break;
-		}
-	}
-	//If a key was released
-	else if(e.type == SDL_KEYUP && e.key.repeat == 0) {
-		//Adjust the velocity
-		switch(e.key.keysym.sym) {
-			case SDLK_w: mVelY += DOT_VELY; break;
-			case SDLK_s: mVelY -= DOT_VELY; break;
-			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
-			case SDLK_a: mVelX += DOT_VELX; break; 
-			case SDLK_d: mVelX -= DOT_VELX; break; 
-		}
-	}
-}
-
 //Box collision detector
 bool checkCollision(SDL_Rect a, SDL_Rect b);
 
@@ -288,99 +75,6 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
 int touchesNpc(SDL_Rect box, Npc *npcContainer[]);
-
-void Dot::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
-
-	int tileTouched, npcTouched;
-
-	//Move the dot left or right
-	mPosX += mVelX * timeStep;
-
-	//If the dot went too far to the left or right or touched a wall
-	if((mPosX < 0) || (mPosX + DOT_WIDTH > LEVEL_WIDTH)) {
-		//move back
-		if(mPosX < 0) {
-			mPosX = 0;
-		}
-		else {
-			mPosX = LEVEL_WIDTH - DOT_WIDTH;
-		}
-	}
-	mBox.x = mPosX;
-	tileTouched = touchesWall(mBox, tiles);
-	if(tileTouched > -1 && mVelX > 0) {
-		mPosX = tiles[tileTouched]->getBox().x - DOT_WIDTH;
-	}
-	if(tileTouched > -1 && mVelX < 0) {
-		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
-	}
-	npcTouched = touchesNpc(mBox, npcContainer);
-	if(npcTouched > -1 && mVelX > 0) {
-		mPosX = npcContainer[npcTouched]->getPosX() - DOT_WIDTH;
-	}
-	if(npcTouched > -1 && mVelX < 0) {
-		mPosX = npcContainer[npcTouched]->getPosX() + npcContainer[npcTouched]->NPC_WIDTH;
-	}
-	mBox.x = mPosX;
-
-	//Move the dot up or down
-	mPosY += mVelY * timeStep;
-
-	//If the dot went too far up or down or touched a wall
-	if((mPosY < 0) || (mPosY + DOT_HEIGHT > LEVEL_HEIGHT)) {
-		if(mPosY < 0) mPosY = 0;
-		else {
-			mPosY = LEVEL_HEIGHT - DOT_HEIGHT;
-			isJumping = false;
-		}
-	} 
-	mBox.y = mPosY;
-	tileTouched = touchesWall(mBox, tiles);
-	if(tileTouched > -1 && mVelY > 0) {
-		mPosY = tiles[tileTouched]->getBox().y - DOT_HEIGHT;
-		isJumping = false;
-	}
-	if(tileTouched > -1 && mVelY < 0) {
-		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
-	}
-	npcTouched = touchesNpc(mBox, npcContainer);
-	if(npcTouched > -1 && mVelY > 0) {
-		mPosY = npcContainer[npcTouched]->getPosY() - DOT_HEIGHT;
-		isJumping = false;
-	}
-	if(npcTouched > -1 && mVelY < 0) {
-		mPosY = npcContainer[npcTouched]->getPosY() + npcContainer[npcTouched]->NPC_HEIGHT;
-	}
-	mBox.y = mPosY;
-}
-
-void Dot::setCamera(SDL_Rect &camera) {
-	//Center the camera over the dot
-	camera.x = (mPosX + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
-	camera.y = (mPosY + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
-
-	//Keep the camera in bounds
-	if(camera.x < 0) {
-		camera.x = 0;
-	}
-	if(camera.y < 0) {
-		camera.y = 0;
-	}
-	if(camera.x > LEVEL_WIDTH - camera.w) {
-		camera.x = LEVEL_WIDTH - camera.w;
-	}
-	if(camera.y > LEVEL_HEIGHT - camera.h) {
-		camera.y = LEVEL_HEIGHT - camera.h;
-	}
-}
-
-void Dot::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
-	//Show the dot
-	dotTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
-
-	// Show particles on top of dot.
-	renderParticles(camera, toggleParticles);
-}
 
 bool init() {
 	//Initialization flag

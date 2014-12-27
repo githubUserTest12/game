@@ -1,7 +1,6 @@
 #ifndef BUTTON_HPP
 	#define BUTTON_HPP
 #include <SDL.h>
-#include "globals.hpp"
 
 enum LButtonSprite {
 	BUTTON_SPRITE_MOUSE_OUT = 0,
@@ -24,7 +23,7 @@ class LButton {
 		// Shows button sprite.
 		void render();
 
-		SDL_Rect dstrect = { SCREEN_WIDTH - 400, 5, 200, 100 };
+		SDL_Rect dstrect = { 1024 - 400, 5, 200, 100 };
 
 	private:
 

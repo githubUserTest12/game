@@ -1,4 +1,5 @@
 #include "button.hpp"
+#include "globals.hpp"
 
 LButton::LButton() {
 	mPosition.x = 0;

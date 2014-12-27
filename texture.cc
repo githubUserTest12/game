@@ -1,4 +1,5 @@
 #include "texture.hpp"
+#include "globals.hpp"
 #include <SDL_image.h>
 
 LTexture::LTexture() {
@@ -49,7 +50,6 @@ bool LTexture::loadFromFile(std::string path) {
 	return mTexture != NULL;
 }
 
-#ifdef _SDL_TTF_H
 bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor) {
 	//Get rid of preexisting texture
 	free();
@@ -79,7 +79,6 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 	//Return success
 	return mTexture != NULL;
 }
-#endif
 
 void LTexture::free() {
 	//Free texture if it exists

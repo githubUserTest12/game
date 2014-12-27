@@ -2,10 +2,12 @@
 	#define GLOBALS_HPP
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <string>
 #include "texture.hpp"
 
 class LTexture;
 class LButton;
+class Npc;
 
 const int SCREEN_WIDTH = 1024;
 const int SCREEN_HEIGHT = 768;
@@ -54,12 +56,12 @@ extern LTexture gRedTexture;
 extern LTexture gGreenTexture;
 extern LTexture gBlueTexture;
 extern LTexture gShimmerTexture;
-
 extern LTexture gButtonSpriteSheetTexture;
+
 extern LButton gButtons[TOTAL_BUTTONS];
 extern SDL_Rect gSpriteClips[4];
 
 extern void log(std::string message);
+extern int touchesNpc(SDL_Rect box, Npc *npcContainer[]);
 
 #endif
-
