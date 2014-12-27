@@ -1,41 +1,5 @@
 #include "npc.hpp"
-
-/*
-void Npc::renderParticles(SDL_Rect &camera, bool toggleParticles) {
-	if(toggleParticles) {
-		// Go through particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-
-			if(particles[i] != NULL) {
-				if(particles[i]->isDead()) {
-					delete particles[i];
-					//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
-					//std::cout << "hit " << mPosX << std::endl;
-					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (NPC_WIDTH / 2), mPosY - camera.y);
-					//}
-					//else 
-					particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
-				}
-			}
-			else {
-				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
-			}
-		}
-
-		// Show particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			particles[i]->render();
-		}
-	}
-	else {
-		// Delete and replace dead particles.
-		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
-			delete particles[i];
-			particles[i] = NULL;
-		}
-	}
-}
-*/
+#include <iostream>
 
 void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the dot
@@ -94,6 +58,8 @@ Npc::Npc(int x, int y, std::string filename) {
 }
 
 Npc::~Npc() {
+	std::cout << "hi mom" << std::endl;
+	npcTexture.free();
 }
 
 void Npc::move(Tile *tiles[], float timeStep) {
@@ -145,4 +111,41 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	}
 	mBox.y = mPosY;
 }
+
+/*
+void Npc::renderParticles(SDL_Rect &camera, bool toggleParticles) {
+	if(toggleParticles) {
+		// Go through particles.
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+
+			if(particles[i] != NULL) {
+				if(particles[i]->isDead()) {
+					delete particles[i];
+					//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
+					//std::cout << "hit " << mPosX << std::endl;
+					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (NPC_WIDTH / 2), mPosY - camera.y);
+					//}
+					//else 
+					particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
+				}
+			}
+			else {
+				particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
+			}
+		}
+
+		// Show particles.
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+			particles[i]->render();
+		}
+	}
+	else {
+		// Delete and replace dead particles.
+		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
+			delete particles[i];
+			particles[i] = NULL;
+		}
+	}
+}
+*/
 

@@ -1,21 +1,22 @@
 #include "character.hpp"
+#include <iostream>
 
-Dot::Dot() {
+Character::Character() {
 	//Initialize the collision box
-	mPosX = DOT_WIDTH + TILE_WIDTH;
+	mPosX = CHARACTER_WIDTH + TILE_WIDTH;
 	mPosY = 0;
 
 	mBox.x = 0;
 	mBox.y = 0;
-	mBox.w = DOT_WIDTH;
-	mBox.h = DOT_HEIGHT;
+	mBox.w = CHARACTER_WIDTH;
+	mBox.h = CHARACTER_HEIGHT;
 	isJumping = false;
 	isMoving = false;
 	flip = SDL_FLIP_NONE;
 
-	//Load dot texture
-	if(!dotTexture.loadFromFile("character.png")) {
-		printf("Failed to load dot texture!\n");
+	//Load character texture
+	if(!characterTexture.loadFromFile("character.png")) {
+		printf("Failed to load character texture!\n");
 	}
 	else {
 		int x = 0; 
@@ -23,10 +24,10 @@ Dot::Dot() {
 		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
 			spriteClips[i].x = x;
 			spriteClips[i].y = y;
-			spriteClips[i].w = DOT_WIDTH;
-			spriteClips[i].h = DOT_HEIGHT;
+			spriteClips[i].w = CHARACTER_WIDTH;
+			spriteClips[i].h = CHARACTER_HEIGHT;
 
-			x += DOT_WIDTH + 1;
+			x += CHARACTER_WIDTH + 1;
 			if(x >=  SPRITESHEET_WIDTH) {
 				x = 0;
 				y += TILE_HEIGHT;
@@ -45,7 +46,7 @@ Dot::Dot() {
 
 }
 
-void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
+void Character::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 	if(toggleParticles) {
 		// Go through particles.
 		for(int i = 0; i < TOTAL_PARTICLES; ++i) {
@@ -55,7 +56,7 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 					delete particles[i];
 					//if(camera.x > 0 && camera.x < LEVEL_WIDTH - camera.w) {
 					//std::cout << "hit " << mPosX << std::endl;
-					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (DOT_WIDTH / 2), mPosY - camera.y);
+					//particles[i] = new Particle((SCREEN_WIDTH / 2) - (CHARACTER_WIDTH / 2), mPosY - camera.y);
 					//}
 					//else 
 					particles[i] = new Particle(mPosX - camera.x, mPosY - camera.y, mBox);
@@ -80,32 +81,38 @@ void Dot::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 	}
 }
 
-void Dot::handleEvent(SDL_Event &e) {
+void Character::handleEvent(SDL_Event &e) {
 	//If a key was pressed
+
+	if(headJump == true) {
+		setVelocityY(0);
+		setVelocityY(CHARACTER_VELY);
+		headJump = false;
+	}
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
 			case SDLK_SPACE: 
 				//if(!isJumping) {
 				mVelY = 0; 
-				mVelY -= DOT_VELY; 
+				mVelY -= CHARACTER_VELY; 
 				//std::cout << mVelY << std::endl;
 				//}
 				break;
 			case SDLK_w: 
-				mVelY -= DOT_VELY;
+				mVelY -= CHARACTER_VELY;
 				//std::cout << mVelY << std::endl;
 				break;
 			case SDLK_s: 
-				mVelY += DOT_VELY;
+				mVelY += CHARACTER_VELY;
 				//std::cout << mVelY << std::endl;
 				break;
-			//case SDLK_DOWN: mVelY += DOT_VELY; break;
+			//case SDLK_DOWN: mVelY += CHARACTER_VELY; break;
 			case SDLK_a: 
-				mVelX -= DOT_VELX; 
+				mVelX -= CHARACTER_VELX; 
 				break;
 			case SDLK_d: 
-				mVelX +=  DOT_VELX; 
+				mVelX +=  CHARACTER_VELX; 
 				break;
 		}
 	}
@@ -113,71 +120,71 @@ void Dot::handleEvent(SDL_Event &e) {
 	else if(e.type == SDL_KEYUP && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
-			case SDLK_w: mVelY += DOT_VELY; break;
-			case SDLK_s: mVelY -= DOT_VELY; break;
-			//case SDLK_DOWN: mVelY -= DOT_VELY; break;
-			case SDLK_a: mVelX += DOT_VELX; break; 
-			case SDLK_d: mVelX -= DOT_VELX; break; 
+			case SDLK_w: mVelY += CHARACTER_VELY; break;
+			case SDLK_s: mVelY -= CHARACTER_VELY; break;
+			//case SDLK_DOWN: mVelY -= CHARACTER_VELY; break;
+			case SDLK_a: mVelX += CHARACTER_VELX; break; 
+			case SDLK_d: mVelX -= CHARACTER_VELX; break; 
 		}
 	}
 }
 
-Dot::~Dot() {
+Character::~Character() {
 	// Delete particles.
 	for(int i = 0; i < TOTAL_PARTICLES; ++i) {
 		delete particles[i];
 	}
 }
 
-void Dot::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
+void Character::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 
 	int tileTouched, npcTouched;
 
-	//Move the dot left or right
+	//Move the character left or right
 	mPosX += mVelX * timeStep;
 
-	//If the dot went too far to the left or right or touched a wall
-	if((mPosX < 0) || (mPosX + DOT_WIDTH > LEVEL_WIDTH)) {
+	//If the character went too far to the left or right or touched a wall
+	if((mPosX < 0) || (mPosX + CHARACTER_WIDTH > LEVEL_WIDTH)) {
 		//move back
 		if(mPosX < 0) {
 			mPosX = 0;
 		}
 		else {
-			mPosX = LEVEL_WIDTH - DOT_WIDTH;
+			mPosX = LEVEL_WIDTH - CHARACTER_WIDTH;
 		}
 	}
 	mBox.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		mPosX = tiles[tileTouched]->getBox().x - DOT_WIDTH;
+		mPosX = tiles[tileTouched]->getBox().x - CHARACTER_WIDTH;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 	npcTouched = touchesNpc(mBox, npcContainer);
 	if(npcTouched > -1 && mVelX > 0) {
-		mPosX = npcContainer[npcTouched]->getPosX() - DOT_WIDTH;
+		mPosX = npcContainer[npcTouched]->getPosX() - CHARACTER_WIDTH;
 	}
 	if(npcTouched > -1 && mVelX < 0) {
 		mPosX = npcContainer[npcTouched]->getPosX() + npcContainer[npcTouched]->NPC_WIDTH;
 	}
 	mBox.x = mPosX;
 
-	//Move the dot up or down
+	//Move the character up or down
 	mPosY += mVelY * timeStep;
 
-	//If the dot went too far up or down or touched a wall
-	if((mPosY < 0) || (mPosY + DOT_HEIGHT > LEVEL_HEIGHT)) {
+	//If the character went too far up or down or touched a wall
+	if((mPosY < 0) || (mPosY + CHARACTER_HEIGHT > LEVEL_HEIGHT)) {
 		if(mPosY < 0) mPosY = 0;
 		else {
-			mPosY = LEVEL_HEIGHT - DOT_HEIGHT;
+			mPosY = LEVEL_HEIGHT - CHARACTER_HEIGHT;
 			isJumping = false;
 		}
 	} 
 	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
-		mPosY = tiles[tileTouched]->getBox().y - DOT_HEIGHT;
+		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {
@@ -185,8 +192,12 @@ void Dot::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 	}
 	npcTouched = touchesNpc(mBox, npcContainer);
 	if(npcTouched > -1 && mVelY > 0) {
-		mPosY = npcContainer[npcTouched]->getPosY() - DOT_HEIGHT;
+		mPosY = npcContainer[npcTouched]->getPosY() - CHARACTER_HEIGHT;
+		headJump = true;
+		//mVelY = 0;
 		isJumping = false;
+		//delete npcContainer[npcTouched];
+		//npcContainer[npcTouched] = NULL;
 	}
 	if(npcTouched > -1 && mVelY < 0) {
 		mPosY = npcContainer[npcTouched]->getPosY() + npcContainer[npcTouched]->NPC_HEIGHT;
@@ -194,10 +205,10 @@ void Dot::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 	mBox.y = mPosY;
 }
 
-void Dot::setCamera(SDL_Rect &camera) {
-	//Center the camera over the dot
-	camera.x = (mPosX + DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
-	camera.y = (mPosY + DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
+void Character::setCamera(SDL_Rect &camera) {
+	//Center the camera over the character
+	camera.x = (mPosX + CHARACTER_WIDTH / 2) - SCREEN_WIDTH / 2;
+	camera.y = (mPosY + CHARACTER_HEIGHT / 2) - SCREEN_HEIGHT / 2;
 
 	//Keep the camera in bounds
 	if(camera.x < 0) {
@@ -214,10 +225,10 @@ void Dot::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Dot::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
-	//Show the dot
-	dotTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
+void Character::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
+	//Show the character
+	characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
 
-	// Show particles on top of dot.
+	// Show particles on top of character.
 	renderParticles(camera, toggleParticles);
 }

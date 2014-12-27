@@ -55,7 +55,7 @@ void log(std::string message) {
 	logger.flush();
 }
 
-//The dot that will move around on the screen
+//The character that will move around on the screen
 //Starts up SDL and creates window
 bool init();
 
@@ -427,8 +427,8 @@ restart:
 			//Event handler
 			SDL_Event e;
 
-			//The dot that will be moving around on the screen
-			Dot dot;
+			//The character that will be moving around on the screen
+			Character character;
 			Npc *npcContainer[TOTAL_NPCS] = {};
 			npcContainer[0] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
 			npcContainer[1] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png");
@@ -444,7 +444,7 @@ restart:
 
 			float acceleration = 1.07;
 			float avgFPS;
-			float timeStep;
+			//float timeStep;
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::stringstream os;
@@ -545,12 +545,35 @@ restart:
 							case 2:
 								randomGuy = "character3.png";
 								break;
+							default:
+								break;
 						}
+						/*
+						if(contained == 100) {
+							contained = 0;
+							if(npcContainer[contained]
+						}
+						*/
 						npcContainer[contained++] = new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy);
 					}
 
-					// input for the dot
-					dot.handleEvent(e);
+					// input for the character
+					character.handleEvent(e);
+
+					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_q) {
+						if(contained >= 0) {
+							if(contained == 0) delete npcContainer[contained];
+							else delete npcContainer[--contained];
+							npcContainer[contained] = NULL;
+						}
+					}
+				}
+
+				if(character.headJump == true) {
+					std::cout << character.headJump << std::endl;
+					character.setVelocityY(0);
+					character.setVelocityY(-character.CHARACTER_VELY);
+					character.headJump = false;
 				}
 
 				Uint32 seconds = ticks / 1000.f;
@@ -564,7 +587,7 @@ restart:
 				if(avgFPS > 2000000) avgFPS = 0;
 
 				// Calculate time step.
-				timeStep = stepTimer.getTicks() / 1000.f; //1.0;
+				//timeStep = stepTimer.getTicks() / 1000.f; //1.0;
 
 				// FPS text.
 				timeText.str("");
@@ -574,14 +597,14 @@ restart:
 				}
 
 				// Gravity implementation.
-				if(dot.getVelocityY() < 15) {
-					dot.setVelocityY(dot.getVelocityY() + acceleration);
+				if(character.getVelocityY() < 15) {
+					character.setVelocityY(character.getVelocityY() + acceleration);
 				}
-				if(dot.getVelocityY() > 15) {
-					dot.setVelocityY(15);
+				if(character.getVelocityY() > 15) {
+					character.setVelocityY(15);
 				}
 
-				for(int i = 0; i < TOTAL_NPCS; ++i) {
+				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
 						if(npcContainer[i]->getVelocityY() < 15) {
 							npcContainer[i]->setVelocityY(npcContainer[i]->getVelocityY() + acceleration);
@@ -593,7 +616,7 @@ restart:
 				}
 
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
-					for(int i = 0; i < TOTAL_NPCS; ++i) {
+					for(int i = 0; i < contained; ++i) {
 						if(npcContainer[i] != NULL) {
 							switch(rand() % 3) {
 								case 0:
@@ -610,6 +633,8 @@ restart:
 									npcContainer[i]->isMoving = false;
 									npcContainer[i]->setVelocityX(0);
 									break;
+								default:
+									break;
 							}
 						}
 					}
@@ -620,17 +645,17 @@ restart:
         // Whole screen viewport.
         //SDL_RenderSetViewport(gRenderer, &wholeScreenViewport);
 
-				//Move the dot.
+				//Move the character.
 				log("moving character...");
-				dot.move(tileSet, npcContainer, 1);
-				for(int i = 0; i < TOTAL_NPCS; ++i) {
+				character.move(tileSet, npcContainer, 1 /*1 for now*/);
+				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
-						npcContainer[i]->move(tileSet, 1);
+						npcContainer[i]->move(tileSet, 1 /*1 for now*/);
 					}
 				}
 
 				log("setting camera...");
-				dot.setCamera(camera);
+				character.setCamera(camera);
 
 				// Scroll background.
 				--scrollingOffset;
@@ -643,14 +668,14 @@ restart:
 				
 				log("preparing font info...");
 				os.str("");
-				os << dot.getBoxPosition().x << ", " << dot.getBoxPosition().y;
+				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y;
 				if(!gTextCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
 				}
 
 				os.str("");
-				os << dot.getVelocityX() << ", " << dot.getVelocityY();
+				os << character.getVelocityX() << ", " << character.getVelocityY();
 				if(!gTextVelocity.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
@@ -685,23 +710,23 @@ restart:
 				gFpsTextTexture.render((SCREEN_WIDTH - gFpsTextTexture.getWidth()),  60);
 				gMouseCoordinates.render((SCREEN_WIDTH - gMouseCoordinates.getWidth()),  90);
 
-				//Render dot
+				//Render character
 				//Uint32 sprite = seconds % 4;
 
 				log("rendering character...");
-				if(dot.getVelocityX() > 0) {
-					currentClip = &dot.spriteClips[frame / dot.ANIMATION_FRAMES];
-					dot.flip = SDL_FLIP_HORIZONTAL;
+				if(character.getVelocityX() > 0) {
+					currentClip = &character.spriteClips[frame / character.ANIMATION_FRAMES];
+					character.flip = SDL_FLIP_HORIZONTAL;
 				}
-				else if(dot.getVelocityX() < 0) {
-					currentClip = &dot.spriteClips[frame / dot.ANIMATION_FRAMES];
-					dot.flip = SDL_FLIP_NONE;
+				else if(character.getVelocityX() < 0) {
+					currentClip = &character.spriteClips[frame / character.ANIMATION_FRAMES];
+					character.flip = SDL_FLIP_NONE;
 				}
-				else currentClip = &dot.spriteClips[1];
-				dot.render(camera, toggleParticles, currentClip);
+				else currentClip = &character.spriteClips[1];
+				character.render(camera, toggleParticles, currentClip);
 
 				log("rendering npc...");
-				for(int i = 0; i < TOTAL_NPCS; ++i) {
+				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
 						if(npcContainer[i]->isMoving) currentClip = &npcContainer[i]->spriteClips[frame / npcContainer[i]->ANIMATION_FRAMES];
 						else currentClip = &npcContainer[i]->spriteClips[1]; 
@@ -712,7 +737,7 @@ restart:
 				// Next frame.
 				++frame;
 				// Cycle.
-				if(frame / dot.ANIMATION_FRAMES >= dot.ANIMATION_FRAMES) frame = 0;
+				if(frame / character.ANIMATION_FRAMES >= character.ANIMATION_FRAMES) frame = 0;
 
         //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
 				// Render buttons.
@@ -734,22 +759,22 @@ restart:
 					SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
 
+				log("end loop...");
 			}
 			log("freeing...");
-			dot.dotTexture.free();
-			for(int i = 0; i < TOTAL_NPCS; ++i) {
-				if(npcContainer[i] != NULL) {
-					npcContainer[i]->npcTexture.free();
-				}
+			character.characterTexture.free();
+			for(int i = 0; i < contained; ++i) {
+				delete npcContainer[i];
 			}
 		}
 
 		//Free resources and close SDL
 		log("closing...");
 		close(tileSet);
-		logger.close();
 		if(restart) goto restart;
 	}
 
+	log("shutdown...");
+	logger.close();
 	return 0;
 }

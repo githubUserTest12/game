@@ -5,40 +5,42 @@
 #include "npc.hpp"
 #include "particle.hpp"
 
-class Dot {
+class Character {
 	public:
-		//The dimensions of the dot
+		//The dimensions of the character
 
-		static const int DOT_WIDTH = 38;
-		static const int DOT_HEIGHT = 55;
+		static const int CHARACTER_WIDTH = 38;
+		static const int CHARACTER_HEIGHT = 55;
 		static const int ANIMATION_FRAMES = 4;
-		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * DOT_WIDTH;
+		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * CHARACTER_WIDTH;
 		//static const int SPRITESHEET_HEIGHT = 40;
 
-		LTexture dotTexture;
+		LTexture characterTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 
-		//Maximum axis velocity of the dot
-		const int DOT_VELY = 15; // * SCREEN_FPS; // 15;
-		const int DOT_VELX = 10; // * SCREEN_FPS; //10;
+		//Maximum axis velocity of the character
+		const int CHARACTER_VELY = 15; // * SCREEN_FPS; // 15;
+		const int CHARACTER_VELX = 10; // * SCREEN_FPS; //10;
 		const int GRAVITY_CONSTANT = 60;
 
+		bool headJump;
+
 		//Initializes the variables allocates particles.
-		Dot();
+		Character();
 
 		// Deallocates particles.
-		~Dot();
+		~Character();
 
-		//Takes key presses and adjusts the dot's velocity
+		//Takes key presses and adjusts the character's velocity
 		void handleEvent(SDL_Event &e);
 
-		//Moves the dot and check collision against tiles
+		//Moves the character and check collision against tiles
 		void move(Tile *tiles[], Npc *npc[], float timeStep);
 
-		//Centers the camera over the dot
+		//Centers the camera over the character
 		void setCamera(SDL_Rect &camera);
 
-		//Shows the dot on the screen
+		//Shows the character on the screen
 		void render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip);
 
 		bool isJumping;
@@ -82,11 +84,11 @@ class Dot {
 		// Render particles.
 		void renderParticles(SDL_Rect &camera, bool toggleParticles);
 
-		//Collision box of the dot
+		//Collision box of the character
 		SDL_Rect mBox;
 		float mPosX, mPosY;
 
-		//The velocity of the dot
+		//The velocity of the character
 		float mVelX, mVelY;
 };
 
