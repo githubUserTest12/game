@@ -4,7 +4,14 @@
 void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the dot
 	if(checkCollision(camera, mBox)) {
-		npcTexture.render(mBox.x - camera.x, mBox.y - camera.y, clip, 0, NULL, flip);
+		//npcTexture.render(mBox.x - camera.x, mBox.y - camera.y, clip, 0, NULL, flip);
+		if(flip == SDL_FLIP_HORIZONTAL) {
+			// To adjust for clipping size.
+			npcTexture.render((int)(mPosX) - camera.x - clip->w + NPC_WIDTH, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, 0, NULL, flip);
+		}
+		else {
+			npcTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, 0, NULL, flip);
+		}
 	}
 
 	// Show particles on top of dot.
@@ -72,19 +79,19 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	mPosX += mVelX * timeStep;
 
 	//If the dot went too far to the left or right or touched a wall
-	if((mPosX < 0) || (mPosX + currentClip->w > LEVEL_WIDTH)) {
+	if((mPosX < 0) || (mPosX + NPC_WIDTH > LEVEL_WIDTH)) {
 		//move back
 		if(mPosX < 0) {
 			mPosX = 0;
 		}
 		else {
-			mPosX = LEVEL_WIDTH - currentClip->w;
+			mPosX = LEVEL_WIDTH - NPC_WIDTH;
 		}
 	}
 	mBox.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		mPosX = tiles[tileTouched]->getBox().x - currentClip->w;
+		mPosX = tiles[tileTouched]->getBox().x - NPC_WIDTH;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
@@ -95,17 +102,17 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	mPosY += mVelY * timeStep;
 
 	//If the dot went too far up or down or touched a wall
-	if((mPosY < 0) || (mPosY + currentClip->h > LEVEL_HEIGHT)) {
+	if((mPosY < 0) || (mPosY + NPC_HEIGHT > LEVEL_HEIGHT)) {
 		if(mPosY < 0) mPosY = 0;
 		else {
-			mPosY = LEVEL_HEIGHT - currentClip->h;
+			mPosY = LEVEL_HEIGHT - NPC_HEIGHT;
 			isJumping = false;
 		}
 	} 
 	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
-		mPosY = tiles[tileTouched]->getBox().y - currentClip->h;
+		mPosY = tiles[tileTouched]->getBox().y - NPC_HEIGHT;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {

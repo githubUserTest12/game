@@ -231,8 +231,7 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the character
 	// XXX BTON - CHANGE SOMETHING HERE.
 	if(flip == SDL_FLIP_HORIZONTAL) {
-		std::cout << mBox.x << std::endl;
-		//std::cout << (int) mPosX - camera.x - clip->w + 76 << std::endl;
+		// To adjust for clipping size.
 		characterTexture.render((int)(mPosX) - camera.x - clip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - clip->h + CHARACTER_HEIGHT, clip, 0, NULL, flip);
 	}
 	else {

@@ -10,8 +10,8 @@ class Character {
 	public:
 		//The dimensions of the character
 
-		static const int CHARACTER_WIDTH = 76;
-		static const int CHARACTER_HEIGHT = 105;
+		static const int CHARACTER_WIDTH = 38;
+		static const int CHARACTER_HEIGHT = 55;
 		static const int ANIMATION_FRAMES = 4;
 		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * CHARACTER_WIDTH;
 		//static const int SPRITESHEET_HEIGHT = 40;
