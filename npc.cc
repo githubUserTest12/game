@@ -11,7 +11,7 @@ void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//renderParticles(camera, toggleParticles);
 }
 
-Npc::Npc(int x, int y, std::string filename) {
+Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filename) : NPC_WIDTH(width), NPC_HEIGHT(height), ANIMATION_FRAMES(maxFrames), SPRITESHEET_WIDTH(width * maxFrames) {
 	//Initialize the collision box
 	mPosX = x;
 	mPosY = y;
@@ -23,6 +23,7 @@ Npc::Npc(int x, int y, std::string filename) {
 	isJumping = false;
 	isMoving = false;
 	flip = SDL_FLIP_NONE;
+	spriteClips.resize(maxFrames);
 
 	//Load dot texture
 	if(!npcTexture.loadFromFile(filename)) {

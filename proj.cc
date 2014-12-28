@@ -431,10 +431,10 @@ restart:
 			
 			//vector implementation
 			std::vector<Npc *> npcVector;
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character3.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character1.png"));
 
 			// Timer.
 			LTimer stepTimer;
@@ -535,20 +535,9 @@ restart:
 					}
 
 					if(e.type == SDL_MOUSEBUTTONDOWN) {
-						switch(rand() % 3) {
-							case 0:
-								randomGuy = "character.png";
-								break;
-							case 1:
-								randomGuy = "character2.png";
-								break;
-							case 2:
-								randomGuy = "character3.png";
-								break;
-							default:
-								break;
-						}
-						npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy));
+						os.str("");
+						os << "character" << rand() % 3 + 1 << ".png";
+						npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 38, 55, 4, os.str()));
 					}
 
 					// input for the character
@@ -563,7 +552,6 @@ restart:
 				}
 
 				if(character.headJump == true) {
-					std::cout << character.headJump << std::endl;
 					character.setVelocityY(0);
 					character.setVelocityY(-character.CHARACTER_VELY);
 					character.headJump = false;
@@ -704,14 +692,14 @@ restart:
 				
 				log("preparing font info...");
 				os.str("");
-				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y;
+				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y << "NPC: " << npcVector[0]->getBoxPosition().x ;
 				if(!gTextCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
 				}
 
 				os.str("");
-				os << character.getVelocityX() << ", " << character.getVelocityY();
+				os << character.getVelocityX() << ", " << (int) character.getVelocityY();
 				if(!gTextVelocity.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
@@ -762,20 +750,15 @@ restart:
 				character.render(camera, toggleParticles, currentClip);
 
 				log("rendering npc...");
-				/*
-				for(int i = 0; i < contained; ++i) {
-					if(npcContainer[i] != NULL) {
-						if(npcContainer[i]->isMoving) currentClip = &npcContainer[i]->spriteClips[frame / npcContainer[i]->ANIMATION_FRAMES];
-						else currentClip = &npcContainer[i]->spriteClips[1]; 
-						npcContainer[i]->render(camera, toggleParticles, currentClip);
-					}
-				}
-				*/
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->isMoving) currentClip = &npcVector[i]->spriteClips[frame / npcVector[i]->ANIMATION_FRAMES];
-					else currentClip = &npcVector[i]->spriteClips[1]; 
-					npcVector[i]->render(camera, toggleParticles, currentClip);
+					if(npcVector[i]->isMoving) {
+						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame / npcVector[i]->ANIMATION_FRAMES];
+					}
+					else { 
+						npcVector[i]->currentClip = &npcVector[i]->spriteClips[1]; 
+					}
+					npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip);
 				}
 				
 				// Next frame.
@@ -796,7 +779,7 @@ restart:
 				SDL_RenderPresent(gRenderer);
 				++countedFrames;
 
-				// If frame finished early.
+				// If frame time finished early.
 				int frameTicks = capTimer.getTicks();
 				if(frameTicks < SCREEN_TICKS_PER_FRAME) {
 					// Wait remaining time.

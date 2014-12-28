@@ -15,7 +15,7 @@ Character::Character() {
 	flip = SDL_FLIP_NONE;
 
 	//Load character texture
-	if(!characterTexture.loadFromFile("character.png")) {
+	if(!characterTexture.loadFromFile("character1.png")) {
 		printf("Failed to load character texture!\n");
 	}
 	else {
@@ -166,7 +166,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
 	}
 	if(npcTouched > -1 && mVelX < 0) {
-		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
+		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->currentClip->w;
 	}
 	mBox.x = mPosX;
 
@@ -202,7 +202,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		//npcVector[npcTouched] = NULL;
 	}
 	if(npcTouched > -1 && mVelY < 0) {
-		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->NPC_HEIGHT;
+		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->currentClip->h;
 	}
 	mBox.y = mPosY;
 }

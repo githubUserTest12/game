@@ -9,22 +9,24 @@ extern int touchesWall(SDL_Rect box, Tile *tiles[]);
 
 class Npc {
 	public:
-		//The dimensions of the dot
-		static const int NPC_WIDTH = 38;
-		static const int NPC_HEIGHT = 55;
-		static const int ANIMATION_FRAMES = 4;
-		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * NPC_WIDTH;
 
 		//Maximum axis velocity of the dot
 		int NPC_VELY = 15;
 		int NPC_VELX = 1;
 
-		// Texture.
-		LTexture npcTexture;
-		SDL_Rect spriteClips[ANIMATION_FRAMES];
+		//The dimensions of the dot
+		const int NPC_WIDTH;
+		const int NPC_HEIGHT;
+		const int ANIMATION_FRAMES;
+		const int SPRITESHEET_WIDTH;
 
 		//Initializes the variables, allocates particles.
-		Npc(int x, int y, std::string filename);
+		Npc(int x, int y, int width, int height, int maxFrames, std::string filename);
+
+		// Texture.
+		LTexture npcTexture;
+		std::vector<SDL_Rect> spriteClips;
+		SDL_Rect *currentClip;
 
 		// Deallocates particles.
 		~Npc();
