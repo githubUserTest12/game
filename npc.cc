@@ -20,6 +20,7 @@ Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filenam
 	mBox.y = 0;
 	mBox.w = NPC_WIDTH;
 	mBox.h = NPC_HEIGHT;
+	currentClip = &mBox;
 	isJumping = false;
 	isMoving = false;
 	flip = SDL_FLIP_NONE;
@@ -39,7 +40,7 @@ Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filenam
 			spriteClips[i].h = NPC_HEIGHT;
 
 			x += NPC_WIDTH + 1;
-			if(x >=  SPRITESHEET_WIDTH) {
+			if(x >= SPRITESHEET_WIDTH) {
 				x = 0;
 				y += TILE_HEIGHT;
 			}
@@ -71,19 +72,19 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	mPosX += mVelX * timeStep;
 
 	//If the dot went too far to the left or right or touched a wall
-	if((mPosX < 0) || (mPosX + NPC_WIDTH > LEVEL_WIDTH)) {
+	if((mPosX < 0) || (mPosX + currentClip->w > LEVEL_WIDTH)) {
 		//move back
 		if(mPosX < 0) {
 			mPosX = 0;
 		}
 		else {
-			mPosX = LEVEL_WIDTH - NPC_WIDTH;
+			mPosX = LEVEL_WIDTH - currentClip->w;
 		}
 	}
 	mBox.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		mPosX = tiles[tileTouched]->getBox().x - NPC_WIDTH;
+		mPosX = tiles[tileTouched]->getBox().x - currentClip->w;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
@@ -94,17 +95,17 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	mPosY += mVelY * timeStep;
 
 	//If the dot went too far up or down or touched a wall
-	if((mPosY < 0) || (mPosY + NPC_HEIGHT > LEVEL_HEIGHT)) {
+	if((mPosY < 0) || (mPosY + currentClip->h > LEVEL_HEIGHT)) {
 		if(mPosY < 0) mPosY = 0;
 		else {
-			mPosY = LEVEL_HEIGHT - NPC_HEIGHT;
+			mPosY = LEVEL_HEIGHT - currentClip->h;
 			isJumping = false;
 		}
 	} 
 	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
-		mPosY = tiles[tileTouched]->getBox().y - NPC_HEIGHT;
+		mPosY = tiles[tileTouched]->getBox().y - currentClip->h;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {

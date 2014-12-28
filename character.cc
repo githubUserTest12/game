@@ -15,7 +15,7 @@ Character::Character() {
 	flip = SDL_FLIP_NONE;
 
 	//Load character texture
-	if(!characterTexture.loadFromFile("character1.png")) {
+	if(!characterTexture.loadFromFile("monster.png")) {
 		printf("Failed to load character texture!\n");
 	}
 	else {
@@ -166,7 +166,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
 	}
 	if(npcTouched > -1 && mVelX < 0) {
-		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->currentClip->w;
+		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
 	}
 	mBox.x = mPosX;
 
@@ -202,7 +202,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		//npcVector[npcTouched] = NULL;
 	}
 	if(npcTouched > -1 && mVelY < 0) {
-		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->currentClip->h;
+		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->NPC_HEIGHT;
 	}
 	mBox.y = mPosY;
 }
@@ -229,7 +229,15 @@ void Character::setCamera(SDL_Rect &camera) {
 
 void Character::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
 	//Show the character
-	characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
+	// XXX BTON - CHANGE SOMETHING HERE.
+	if(flip == SDL_FLIP_HORIZONTAL) {
+		std::cout << mBox.x << std::endl;
+		//std::cout << (int) mPosX - camera.x - clip->w + 76 << std::endl;
+		characterTexture.render((int)(mPosX) - camera.x - clip->w + 76, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
+	}
+	else {
+		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y, clip, 0, NULL, flip);
+	}
 
 	// Show particles on top of character.
 	renderParticles(camera, toggleParticles);

@@ -428,13 +428,54 @@ restart:
 
 			//The character that will be moving around on the screen
 			Character character;
-			
+
+			character.spriteClips[0].x = 0;
+			character.spriteClips[0].y = 0;
+			character.spriteClips[0].w = 76;
+			character.spriteClips[0].h = 105;
+
+			character.spriteClips[1].x = 77;
+			character.spriteClips[1].y = 0;
+			character.spriteClips[1].w = 96;
+			character.spriteClips[1].h = 105;
+
+			character.spriteClips[2].x = 174;
+			character.spriteClips[2].y = 0;
+			character.spriteClips[2].w = 75;
+			character.spriteClips[2].h = 105;
+
+			character.spriteClips[3].x = 250;
+			character.spriteClips[3].y = 0;
+			character.spriteClips[3].w = 96;
+			character.spriteClips[3].h = 105;
+
 			//vector implementation
 			std::vector<Npc *> npcVector;
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character3.png"));
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character1.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 76) + TILE_WIDTH, 0, 76, 105, 4, "monster.png"));
+
+			npcVector[4]->spriteClips[0].x = 0;
+			npcVector[4]->spriteClips[0].y = 0;
+			npcVector[4]->spriteClips[0].w = 76;
+			npcVector[4]->spriteClips[0].h = 105;
+
+			npcVector[4]->spriteClips[1].x = 77;
+			npcVector[4]->spriteClips[1].y = 0;
+			npcVector[4]->spriteClips[1].w = 96;
+			npcVector[4]->spriteClips[1].h = 105;
+
+			npcVector[4]->spriteClips[2].x = 174;
+			npcVector[4]->spriteClips[2].y = 0;
+			npcVector[4]->spriteClips[2].w = 75;
+			npcVector[4]->spriteClips[2].h = 105;
+
+			npcVector[4]->spriteClips[3].x = 250;
+			npcVector[4]->spriteClips[3].y = 0;
+			npcVector[4]->spriteClips[3].w = 96;
+			npcVector[4]->spriteClips[3].h = 105;
 
 			// Timer.
 			LTimer stepTimer;
@@ -607,35 +648,6 @@ restart:
 					}
 				}
 
-				/*
-				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
-					for(int i = 0; i < contained; ++i) {
-						if(npcContainer[i] != NULL) {
-							switch(rand() % 3) {
-								case 0:
-									npcContainer[i]->isMoving = true;
-									npcContainer[i]->setVelocityX(-npcContainer[i]->NPC_VELX);
-									npcContainer[i]->flip = SDL_FLIP_NONE;
-									break;
-								case 1:
-									npcContainer[i]->isMoving = true;
-									npcContainer[i]->setVelocityX(npcContainer[i]->NPC_VELX);
-									npcContainer[i]->flip = SDL_FLIP_HORIZONTAL;
-									break;
-								case 2:
-									npcContainer[i]->isMoving = false;
-									npcContainer[i]->setVelocityX(0);
-									break;
-								default:
-									break;
-							}
-						}
-					}
-					npcTimer.start();
-					
-				}
-				*/
-
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
 					for(unsigned int i = 0; i < npcVector.size(); ++i) {
 						switch(rand() % 3) {
@@ -692,7 +704,7 @@ restart:
 				
 				log("preparing font info...");
 				os.str("");
-				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y << "NPC: " << npcVector[0]->getBoxPosition().x ;
+				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y;
 				if(!gTextCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
@@ -747,7 +759,10 @@ restart:
 					character.flip = SDL_FLIP_NONE;
 				}
 				else currentClip = &character.spriteClips[1];
-				character.render(camera, toggleParticles, currentClip);
+				// XXX BTON - YOU LEFT OFF HERE
+				//currentClip = &character.spriteClips[0];
+				SDL_Rect tempClip = *currentClip;
+				character.render(camera, toggleParticles, &tempClip);
 
 				log("rendering npc...");
 				
