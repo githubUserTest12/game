@@ -455,7 +455,7 @@ restart:
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character3.png"));
 			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character1.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 76) + TILE_WIDTH, 0, 76, 105, 4, "monster.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 76) + TILE_WIDTH, 0, 76, 105, 4, "character4.png"));
 
 			npcVector[4]->spriteClips[0].x = 0;
 			npcVector[4]->spriteClips[0].y = 0;
@@ -577,8 +577,34 @@ restart:
 
 					if(e.type == SDL_MOUSEBUTTONDOWN) {
 						os.str("");
-						os << "character" << rand() % 3 + 1 << ".png";
-						npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 38, 55, 4, os.str()));
+						int random = rand() % 4 + 1;
+						os << "character" << random << ".png";
+						if(random == 4) {
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 76, 105, 4, os.str()));
+
+							npcVector[npcVector.size() - 1]->spriteClips[0].x = 0;
+							npcVector[npcVector.size() - 1]->spriteClips[0].y = 0;
+							npcVector[npcVector.size() - 1]->spriteClips[0].w = 76;
+							npcVector[npcVector.size() - 1]->spriteClips[0].h = 105;
+
+							npcVector[npcVector.size() - 1]->spriteClips[1].x = 77;
+							npcVector[npcVector.size() - 1]->spriteClips[1].y = 0;
+							npcVector[npcVector.size() - 1]->spriteClips[1].w = 96;
+							npcVector[npcVector.size() - 1]->spriteClips[1].h = 105;
+
+							npcVector[npcVector.size() - 1]->spriteClips[2].x = 174;
+							npcVector[npcVector.size() - 1]->spriteClips[2].y = 0;
+							npcVector[npcVector.size() - 1]->spriteClips[2].w = 75;
+							npcVector[npcVector.size() - 1]->spriteClips[2].h = 105;
+
+							npcVector[npcVector.size() - 1]->spriteClips[3].x = 250;
+							npcVector[npcVector.size() - 1]->spriteClips[3].y = 0;
+							npcVector[npcVector.size() - 1]->spriteClips[3].w = 96;
+							npcVector[npcVector.size() - 1]->spriteClips[3].h = 105;
+						}
+						else {
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 38, 55, 4, os.str()));
+						}
 					}
 
 					// input for the character
@@ -593,6 +619,8 @@ restart:
 				}
 
 				if(character.headJump == true) {
+					delete npcVector[character.npcCollided];
+					npcVector.erase(npcVector.begin() + character.npcCollided);
 					character.setVelocityY(0);
 					character.setVelocityY(-character.CHARACTER_VELY);
 					character.headJump = false;
@@ -627,6 +655,7 @@ restart:
 				}
 
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
+					if(npcVector[i]->NPC_HEIGHT == 105) continue;
 					if(npcVector[i]->getVelocityY() < 15) {
 						npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
 					}
@@ -754,7 +783,7 @@ restart:
 				log("rendering npc...");
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->isMoving) {
+					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == 105) {
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame / npcVector[i]->ANIMATION_FRAMES];
 					}
 					else { 

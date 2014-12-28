@@ -25,6 +25,7 @@ class Character {
 		const int GRAVITY_CONSTANT = 60;
 
 		bool headJump;
+		int npcCollided;
 
 		//Initializes the variables allocates particles.
 		Character();

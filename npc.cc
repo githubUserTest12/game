@@ -67,7 +67,7 @@ Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filenam
 }
 
 Npc::~Npc() {
-	std::cout << "hi mom" << std::endl;
+	//std::cout << "hi mom" << std::endl;
 	npcTexture.free();
 }
 

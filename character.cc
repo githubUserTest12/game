@@ -15,7 +15,7 @@ Character::Character() {
 	flip = SDL_FLIP_NONE;
 
 	//Load character texture
-	if(!characterTexture.loadFromFile("monster.png")) {
+	if(!characterTexture.loadFromFile("character4.png")) {
 		printf("Failed to load character texture!\n");
 	}
 	else {
@@ -196,8 +196,9 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		headJump = true;
 		//mVelY = 0;.
 		isJumping = false;
-		delete npcVector[npcTouched];
-		npcVector.erase(npcVector.begin() + npcTouched);
+		npcCollided = npcTouched;
+		//delete npcVector[npcTouched];
+		//npcVector.erase(npcVector.begin() + npcTouched);
 		//delete npcVector[npcTouched];
 		//npcVector[npcTouched] = NULL;
 	}
