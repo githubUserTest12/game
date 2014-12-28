@@ -626,19 +626,6 @@ restart:
 					character.setVelocityY(15);
 				}
 
-				/*
-				for(int i = 0; i < contained; ++i) {
-					if(npcContainer[i] != NULL) {
-						if(npcContainer[i]->getVelocityY() < 15) {
-							npcContainer[i]->setVelocityY(npcContainer[i]->getVelocityY() + acceleration);
-						}
-						if(npcContainer[i]->getVelocityY() > 15) {
-							npcContainer[i]->setVelocityY(15);
-						}
-					}
-				}
-				*/
-
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
 					if(npcVector[i]->getVelocityY() < 15) {
 						npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
