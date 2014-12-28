@@ -136,7 +136,7 @@ Character::~Character() {
 	}
 }
 
-void Character::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
+void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeStep) {
 
 	int tileTouched, npcTouched;
 
@@ -161,12 +161,12 @@ void Character::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
-	npcTouched = touchesNpc(mBox, npcContainer);
+	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelX > 0) {
-		mPosX = npcContainer[npcTouched]->getPosX() - CHARACTER_WIDTH;
+		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
 	}
 	if(npcTouched > -1 && mVelX < 0) {
-		mPosX = npcContainer[npcTouched]->getPosX() + npcContainer[npcTouched]->NPC_WIDTH;
+		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
 	}
 	mBox.x = mPosX;
 
@@ -190,17 +190,19 @@ void Character::move(Tile *tiles[], Npc *npcContainer[], float timeStep) {
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
-	npcTouched = touchesNpc(mBox, npcContainer);
+	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelY > 0) {
-		mPosY = npcContainer[npcTouched]->getPosY() - CHARACTER_HEIGHT;
+		mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
 		headJump = true;
-		//mVelY = 0;
+		//mVelY = 0;.
 		isJumping = false;
-		//delete npcContainer[npcTouched];
-		//npcContainer[npcTouched] = NULL;
+		delete npcVector[npcTouched];
+		npcVector.erase(npcVector.begin() + npcTouched);
+		//delete npcVector[npcTouched];
+		//npcVector[npcTouched] = NULL;
 	}
 	if(npcTouched > -1 && mVelY < 0) {
-		mPosY = npcContainer[npcTouched]->getPosY() + npcContainer[npcTouched]->NPC_HEIGHT;
+		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->NPC_HEIGHT;
 	}
 	mBox.y = mPosY;
 }

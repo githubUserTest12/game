@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 #include "npc.hpp"
 #include "texture.hpp"
 #include "tiles.hpp"
@@ -74,7 +75,7 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
 
-int touchesNpc(SDL_Rect box, Npc *npcContainer[]);
+int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcVector);
 
 bool init() {
 	//Initialization flag
@@ -383,13 +384,11 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	return -1;
 }
 
-int touchesNpc(SDL_Rect box, Npc *npcContainer[]) {
+int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcVector) {
 	//Go through the npc
-	for(int i = 0; i < TOTAL_NPCS; ++i) {
-		if(npcContainer[i] !=	NULL) {
-			if(checkCollision(box, npcContainer[i]->getBoxPosition())) {
-				return i;
-			}
+	for(unsigned int i = 0; i < npcVector.size(); ++i) {
+		if(checkCollision(box, npcVector[i]->getBoxPosition())) {
+			return i;
 		}
 	}
 
@@ -429,12 +428,13 @@ restart:
 
 			//The character that will be moving around on the screen
 			Character character;
-			Npc *npcContainer[TOTAL_NPCS] = {};
-			npcContainer[0] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
-			npcContainer[1] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png");
-			npcContainer[2] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character.png");
-			npcContainer[3] = new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png");
-			int contained = 4;
+			
+			//vector implementation
+			std::vector<Npc *> npcVector;
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character3.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - Npc::NPC_WIDTH) + TILE_WIDTH, 0, "character.png"));
 
 			// Timer.
 			LTimer stepTimer;
@@ -548,23 +548,16 @@ restart:
 							default:
 								break;
 						}
-						/*
-						if(contained == 100) {
-							contained = 0;
-							if(npcContainer[contained]
-						}
-						*/
-						npcContainer[contained++] = new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy);
+						npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, randomGuy));
 					}
 
 					// input for the character
 					character.handleEvent(e);
 
 					if(e.type == SDL_KEYDOWN && e.key.repeat == 0 && e.key.keysym.sym == SDLK_q) {
-						if(contained >= 0) {
-							if(contained == 0) delete npcContainer[contained];
-							else delete npcContainer[--contained];
-							npcContainer[contained] = NULL;
+						if(npcVector.size() != 0) {
+							delete npcVector[npcVector.size() - 1];
+							npcVector.pop_back();
 						}
 					}
 				}
@@ -604,6 +597,7 @@ restart:
 					character.setVelocityY(15);
 				}
 
+				/*
 				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
 						if(npcContainer[i]->getVelocityY() < 15) {
@@ -614,7 +608,18 @@ restart:
 						}
 					}
 				}
+				*/
 
+				for(unsigned int i = 0; i < npcVector.size(); ++i) {
+					if(npcVector[i]->getVelocityY() < 15) {
+						npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
+					}
+					if(npcVector[i]->getVelocityY() > 15) {
+						npcVector[i]->setVelocityY(15);
+					}
+				}
+
+				/*
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
 					for(int i = 0; i < contained; ++i) {
 						if(npcContainer[i] != NULL) {
@@ -641,17 +646,48 @@ restart:
 					npcTimer.start();
 					
 				}
+				*/
+
+				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
+					for(unsigned int i = 0; i < npcVector.size(); ++i) {
+						switch(rand() % 3) {
+							case 0:
+								npcVector[i]->isMoving = true;
+								npcVector[i]->setVelocityX(-npcVector[i]->NPC_VELX);
+								npcVector[i]->flip = SDL_FLIP_NONE;
+								break;
+							case 1:
+								npcVector[i]->isMoving = true;
+								npcVector[i]->setVelocityX(npcVector[i]->NPC_VELX);
+								npcVector[i]->flip = SDL_FLIP_HORIZONTAL;
+								break;
+							case 2:
+								npcVector[i]->isMoving = false;
+								npcVector[i]->setVelocityX(0);
+								break;
+							default:
+								break;
+						}
+					}
+					npcTimer.start();
+					
+				}
 
         // Whole screen viewport.
         //SDL_RenderSetViewport(gRenderer, &wholeScreenViewport);
 
 				//Move the character.
 				log("moving character...");
-				character.move(tileSet, npcContainer, 1 /*1 for now*/);
+				character.move(tileSet, npcVector, 1 /*1 for now*/);
+				/*
 				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
-						npcContainer[i]->move(tileSet, 1 /*1 for now*/);
+						npcContainer[i]->move(tileSet, 1 1 for now);
 					}
+				}
+				*/
+				for(unsigned int i = 0; i < npcVector.size(); ++i) {
+					npcVector[i]->move(tileSet, 1 /*1 for now*/);
 				}
 
 				log("setting camera...");
@@ -683,7 +719,7 @@ restart:
 
 				os.str("");
 				SDL_GetMouseState(&xMouse, &yMouse);
-				os << xMouse << ", " << yMouse << ": " << contained;
+				os << xMouse << ", " << yMouse << ": " << npcVector.size();
 				if(!gMouseCoordinates.loadFromRenderedText(os.str().c_str(), textColor)) {
 					log("error!");
 					printf("failed to render text texture\n");
@@ -726,12 +762,20 @@ restart:
 				character.render(camera, toggleParticles, currentClip);
 
 				log("rendering npc...");
+				/*
 				for(int i = 0; i < contained; ++i) {
 					if(npcContainer[i] != NULL) {
 						if(npcContainer[i]->isMoving) currentClip = &npcContainer[i]->spriteClips[frame / npcContainer[i]->ANIMATION_FRAMES];
 						else currentClip = &npcContainer[i]->spriteClips[1]; 
 						npcContainer[i]->render(camera, toggleParticles, currentClip);
 					}
+				}
+				*/
+				
+				for(unsigned int i = 0; i < npcVector.size(); ++i) {
+					if(npcVector[i]->isMoving) currentClip = &npcVector[i]->spriteClips[frame / npcVector[i]->ANIMATION_FRAMES];
+					else currentClip = &npcVector[i]->spriteClips[1]; 
+					npcVector[i]->render(camera, toggleParticles, currentClip);
 				}
 				
 				// Next frame.
@@ -761,10 +805,17 @@ restart:
 
 				log("end loop...");
 			}
+
 			log("freeing...");
 			character.characterTexture.free();
+			/*
 			for(int i = 0; i < contained; ++i) {
 				delete npcContainer[i];
+			}
+			*/
+
+			for(unsigned int i = 0; i < npcVector.size(); ++i) {
+				delete npcVector[i];
 			}
 		}
 

@@ -1,5 +1,6 @@
 #ifndef CHARACTER_HPP
 	#define CHARACTER_HPP
+#include <vector>
 #include "globals.hpp"
 #include "tiles.hpp"
 #include "npc.hpp"
@@ -35,7 +36,7 @@ class Character {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the character and check collision against tiles
-		void move(Tile *tiles[], Npc *npc[], float timeStep);
+		void move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeStep);
 
 		//Centers the camera over the character
 		void setCamera(SDL_Rect &camera);

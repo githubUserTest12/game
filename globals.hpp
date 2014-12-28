@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <string>
+#include <vector>
 #include "texture.hpp"
 
 class LTexture;
@@ -62,6 +63,6 @@ extern LButton gButtons[TOTAL_BUTTONS];
 extern SDL_Rect gSpriteClips[4];
 
 extern void log(std::string message);
-extern int touchesNpc(SDL_Rect box, Npc *npcContainer[]);
+extern int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcContainer);
 
 #endif

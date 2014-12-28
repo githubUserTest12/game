@@ -33,3 +33,5 @@ bool Particle::isDead() {
 	return mFrame > frameCap;
 }
 
+Particle::~Particle() {
+}

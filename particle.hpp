@@ -7,6 +7,8 @@ class Particle {
 		// Initialize position and animation.
 		Particle(int x, int y, SDL_Rect mBox);
 
+		~Particle();
+
 		// Shows the particle.
 		void render();
 
