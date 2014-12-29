@@ -13,6 +13,7 @@ Character::Character() {
 	isJumping = false;
 	isMoving = false;
 	flip = SDL_FLIP_NONE;
+	currentFrame = 0;
 
 	//Load character texture
 	if(!characterTexture.loadFromFile("character4.png")) {
@@ -34,6 +35,7 @@ Character::Character() {
 			}
 		}
 	}
+	currentClip = &spriteClips[0];
 
 	//Initialize the velocity
 	mVelX = 0;
@@ -114,6 +116,12 @@ void Character::handleEvent(SDL_Event &e) {
 			case SDLK_d: 
 				mVelX +=  CHARACTER_VELX; 
 				break;
+			default:
+				break;
+			case SDLK_f:
+				isAttacking = true;
+				std::cout << "hit" << std::endl;
+				break;
 		}
 	}
 	//If a key was released
@@ -125,6 +133,7 @@ void Character::handleEvent(SDL_Event &e) {
 			//case SDLK_DOWN: mVelY -= CHARACTER_VELY; break;
 			case SDLK_a: mVelX += CHARACTER_VELX; break; 
 			case SDLK_d: mVelX -= CHARACTER_VELX; break; 
+			default: break;
 		}
 	}
 }
@@ -228,15 +237,42 @@ void Character::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Character::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
+void Character::render(SDL_Rect &camera, bool toggleParticles, int &frame) {
 	//Show the character
-	// XXX BTON - CHANGE SOMETHING HERE.
-	if(flip == SDL_FLIP_HORIZONTAL) {
-		// To adjust for clipping size.
-		characterTexture.render((int)(mPosX) - camera.x - clip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - clip->h + CHARACTER_HEIGHT, clip, 0, NULL, flip);
+	if(isAttacking) {
+		if(currentFrame / ANIMATION_FRAMES < ANIMATION_FRAMES) {
+			std::cout << "currentFrame: " << currentFrame << ", " << currentFrame / ANIMATION_FRAMES << std::endl;
+			currentClip = &spriteClips[currentFrame / ANIMATION_FRAMES];
+			++currentFrame;
+		}
+		else {
+			currentFrame = 0;
+			isAttacking = false;
+			currentClip = &spriteClips[0];
+		}
 	}
 	else {
-		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - clip->h + CHARACTER_HEIGHT, clip, 0, NULL, flip);
+		if(getVelocityX() > 0) {
+			std::cout << "currentFrame: " << frame << ", " << frame / ANIMATION_FRAMES << std::endl;
+			currentClip = &spriteClips[frame / ANIMATION_FRAMES];
+			flip = SDL_FLIP_HORIZONTAL;
+		}
+		else if(getVelocityX() < 0) {
+			currentClip = &spriteClips[frame / ANIMATION_FRAMES];
+			flip = SDL_FLIP_NONE;
+		}
+		else currentClip = &spriteClips[1];
+	}
+	// XXX BTON - YOU LEFT OFF HERE
+	//currentClip = &spriteClips[0];
+	// XXX BTON - CHANGE SOMETHING HERE.
+
+	if(flip == SDL_FLIP_HORIZONTAL) {
+		// To adjust for clipping size.
+		characterTexture.render((int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, 0, NULL, flip);
+	}
+	else {
+		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, 0, NULL, flip);
 	}
 
 	// Show particles on top of character.

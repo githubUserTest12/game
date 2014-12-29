@@ -23,7 +23,7 @@ class LButton {
 		// Shows button sprite.
 		void render();
 
-		SDL_Rect dstrect = { 1024 - 400, 5, 200, 100 };
+		SDL_Rect dstrect = { 1024 - 300, 5, 100, 50 };
 
 	private:
 

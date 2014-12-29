@@ -25,7 +25,10 @@ class Character {
 		const int GRAVITY_CONSTANT = 60;
 
 		bool headJump;
+		bool isAttacking;
 		int npcCollided;
+		SDL_Rect *currentClip = NULL;
+		int currentFrame;
 
 		//Initializes the variables allocates particles.
 		Character();
@@ -43,7 +46,7 @@ class Character {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the character on the screen
-		void render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip);
+		void render(SDL_Rect &camera, bool toggleParticles, int &frame);
 
 		bool isJumping;
 		bool isMoving;

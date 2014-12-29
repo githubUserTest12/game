@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <string>
+#include <SDL_mixer.h>
 #include <vector>
 #include "texture.hpp"
 
@@ -64,5 +65,6 @@ extern SDL_Rect gSpriteClips[4];
 
 extern void log(std::string message);
 extern int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcContainer);
+extern Mix_Music *gMusic[4];
 
 #endif

@@ -48,6 +48,10 @@ void LButton::handleEvent(SDL_Event *e) {
 					mCurrentSprite = BUTTON_SPRITE_MOUSE_OVER_MOTION;
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if(Mix_PlayingMusic() == 0) {
+						Mix_PlayMusic(gMusic[rand() % 2], -1);
+					}
+					else Mix_HaltMusic();
 					mCurrentSprite = BUTTON_SPRITE_MOUSE_DOWN;
 					break;
 				case SDL_MOUSEBUTTONUP:

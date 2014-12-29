@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <SDL_mixer.h>
 #include <stdio.h>
 #include <string>
 #include <fstream>
@@ -44,6 +45,8 @@ LTexture gGreenTexture;
 LTexture gBlueTexture;
 LTexture gShimmerTexture;
 
+Mix_Music *gMusic[4];
+
 std::ofstream logger;
 
 //int counter = 0;
@@ -82,7 +85,7 @@ bool init() {
 	bool success = true;
 
 	//Initialize SDL
-	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
 		success = false;
 	}
@@ -93,7 +96,7 @@ bool init() {
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		gWindow = SDL_CreateWindow("Awesome Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if(gWindow == NULL) {
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 			success = false;
@@ -119,6 +122,12 @@ bool init() {
 				// Initialize SDL_ttf.
 				if(TTF_Init() == -1 ) {
 					printf("SDL_ttf failed to initialize, error: %s\n", TTF_GetError());
+					success = false;
+				}
+
+				// Initialize SDL_mixer.
+				if(Mix_OpenAudio(22050, AUDIO_U8, 1, 2048) < 0) {
+					printf("SDL_mixer failed to initialize, error: %s\n", Mix_GetError());
 					success = false;
 				}
 			}
@@ -187,13 +196,11 @@ bool loadMedia(Tile *tiles[]) {
 		success = false;
 	}
 	//Load sprites
-	if(!gButtonSpriteSheetTexture.loadFromFile("button.png"))
-	{
+	if(!gButtonSpriteSheetTexture.loadFromFile("button.png")) {
 		printf( "Failed to load button sprite texture!\n" );
 		success = false;
 	}
-	else
-	{
+	else {
 		//Set sprites
 		for( int i = 0; i < BUTTON_SPRITE_TOTAL; ++i )
 		{
@@ -205,6 +212,18 @@ bool loadMedia(Tile *tiles[]) {
 
 		//Set buttons in corners
 		gButtons[0].setPosition(gButtons[0].dstrect.x, gButtons[0].dstrect.y);
+	}
+
+	// Load music.
+	gMusic[0] = Mix_LoadMUS("tokage.mid");
+	if(gMusic[0] == NULL) {
+		printf("failed to load music, error: %s\n", Mix_GetError());
+		success = false;
+	}
+	gMusic[1] = Mix_LoadMUS("wild.mid");
+	if(gMusic[1] == NULL) {
+		printf("failed to load music, error: %s\n", Mix_GetError());
+		success = false;
 	}
 
 	return success;
@@ -232,6 +251,12 @@ void close(Tile *tiles[]) {
 	gFpsTextTexture.free();
 	gButtonSpriteSheetTexture.free();
 
+	// Free music.
+	Mix_FreeMusic(gMusic[0]);
+	Mix_FreeMusic(gMusic[1]);
+	gMusic[0] = NULL;
+	gMusic[1] = NULL;
+
 	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
@@ -240,6 +265,7 @@ void close(Tile *tiles[]) {
 	gFont = NULL;
 
 	//Quit SDL subsystems
+	Mix_Quit();
 	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
@@ -505,7 +531,6 @@ restart:
 
 			// Current animation frame.
 			int frame = 0;
-			SDL_Rect *currentClip;
 
 			// Background scrolling offset.
 			int scrollingOffset = 0;
@@ -534,6 +559,7 @@ restart:
 			log("beginning main loop...");
 			//While application is running
 			while(!quit && !restart) {
+
 				// introduce lag.
 				//system("./clear.sh");
 
@@ -655,7 +681,20 @@ restart:
 				}
 
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->NPC_HEIGHT == 105) continue;
+					if(npcVector[i]->NPC_HEIGHT == 105) {
+						switch(rand() % 3) {
+							case 0:
+								npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
+								break;
+							case 1:
+								npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() - acceleration);
+								break;
+							case 2:
+								npcVector[i]->setVelocityY(0);
+								break;
+						}
+						continue;
+					}
 					if(npcVector[i]->getVelocityY() < 15) {
 						npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
 					}
@@ -686,7 +725,6 @@ restart:
 						}
 					}
 					npcTimer.start();
-					
 				}
 
         // Whole screen viewport.
@@ -766,19 +804,7 @@ restart:
 				//Uint32 sprite = seconds % 4;
 
 				log("rendering character...");
-				if(character.getVelocityX() > 0) {
-					currentClip = &character.spriteClips[frame / character.ANIMATION_FRAMES];
-					character.flip = SDL_FLIP_HORIZONTAL;
-				}
-				else if(character.getVelocityX() < 0) {
-					currentClip = &character.spriteClips[frame / character.ANIMATION_FRAMES];
-					character.flip = SDL_FLIP_NONE;
-				}
-				else currentClip = &character.spriteClips[1];
-				// XXX BTON - YOU LEFT OFF HERE
-				//currentClip = &character.spriteClips[0];
-				SDL_Rect tempClip = *currentClip;
-				character.render(camera, toggleParticles, &tempClip);
+				character.render(camera, toggleParticles, frame);
 
 				log("rendering npc...");
 				
@@ -799,11 +825,9 @@ restart:
 
         //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
 				// Render buttons.
-				/*
 				for(int i = 0; i < TOTAL_BUTTONS; ++i) {
 					gButtons[i].render();
 				}
-				*/
 
 				log("updating screen...");
 				//Update screen
@@ -819,6 +843,9 @@ restart:
 
 				log("end loop...");
 			}
+
+			if(quit) log("quit");
+			else log("false");
 
 			log("freeing...");
 			character.characterTexture.free();
