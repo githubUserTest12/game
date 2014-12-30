@@ -27,9 +27,7 @@ class Character {
 		const int GRAVITY_CONSTANT = 60;
 
 		bool headJump;
-		bool swordReach;
 		bool isAttacking;
-		int npcCollided;
 		SDL_Rect *currentClip = NULL;
 		int currentFrame;
 

@@ -4,8 +4,11 @@
 #include "tiles.hpp"
 #include "globals.hpp"
 #include "texture.hpp"
+#include "character.hpp"
 
 extern int touchesWall(SDL_Rect box, Tile *tiles[]);
+
+class Character;
 
 class Npc {
 	public:
@@ -23,6 +26,9 @@ class Npc {
 		//Initializes the variables, allocates particles.
 		Npc(int x, int y, int width, int height, int maxFrames, std::string filename);
 
+		bool wasStabbed;
+		bool wasJumped;
+
 		// Texture.
 		LTexture npcTexture;
 		std::vector<SDL_Rect> spriteClips;
@@ -35,7 +41,7 @@ class Npc {
 		void handleEvent(SDL_Event &e);
 
 		//Moves the dot and check collision against tiles
-		void move(Tile *tiles[], float timeStep);
+		void move(Tile *tiles[], Character &character, float timeStep);
 
 		//Centers the camera over the dot
 		//void setCamera(SDL_Rect &camera);

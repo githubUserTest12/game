@@ -645,8 +645,6 @@ restart:
 				}
 
 				if(character.headJump == true) {
-					delete npcVector[character.npcCollided];
-					npcVector.erase(npcVector.begin() + character.npcCollided);
 					character.setVelocityY(0);
 					character.setVelocityY(-character.CHARACTER_VELY);
 					character.headJump = false;
@@ -741,7 +739,11 @@ restart:
 				}
 				*/
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					npcVector[i]->move(tileSet, 1 /*1 for now*/);
+					npcVector[i]->move(tileSet, character, 1 /*1 for now*/);
+					if(npcVector[i]->wasStabbed || npcVector[i]->wasJumped) {
+						delete npcVector[i];
+						npcVector.erase(npcVector.begin() + i);
+					}
 				}
 
 				log("setting camera...");

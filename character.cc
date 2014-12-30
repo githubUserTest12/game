@@ -14,7 +14,7 @@ Character::Character() {
 	isMoving = false;
 	isAttacking = false;
 	headJump = false;
-	swordReach = false;
+	//npcStabbed = 0;
 	flip = SDL_FLIP_NONE;
 	currentFrame = 0;
 
@@ -46,7 +46,7 @@ Character::Character() {
 				spriteClips[i].w = 38;
 				spriteClips[i].h = 55;
 
-				x += CHARACTER_WIDTH + 1;
+				x += 38 + 1;
 				/*
 				if(x >= SPRITESHEET_WIDTH) {
 					x = 0;
@@ -107,11 +107,13 @@ void Character::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 void Character::handleEvent(SDL_Event &e) {
 	//If a key was pressed
 
+	/*
 	if(headJump == true) {
 		setVelocityY(0);
 		setVelocityY(CHARACTER_VELY);
 		headJump = false;
 	}
+	*/
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
@@ -192,16 +194,12 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	}
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelX > 0) {
-		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
-		if(isAttacking) {
-			swordReach = true;
-		}
+		if(isAttacking) npcVector[npcTouched]->wasStabbed = true;
+		else mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
 	}
 	if(npcTouched > -1 && mVelX < 0) {
-		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
-		if(isAttacking) {
-			swordReach = true;
-		}
+		if(isAttacking) npcVector[npcTouched]->wasStabbed = true;
+		else mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
 	}
 	mBox.x = mPosX;
 
@@ -212,6 +210,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	if((mPosY < 0) || (mPosY + CHARACTER_HEIGHT > LEVEL_HEIGHT)) {
 		if(mPosY < 0) mPosY = 0;
 		else {
+			mVelY = 0;
 			mPosY = LEVEL_HEIGHT - CHARACTER_HEIGHT;
 			isJumping = false;
 		}
@@ -219,6 +218,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
+		mVelY = 0;
 		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
@@ -227,18 +227,15 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	}
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelY > 0) {
-		mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
+		if(!isAttacking) {
+			mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
+		}
 		headJump = true;
-		//mVelY = 0;.
 		isJumping = false;
-		npcCollided = npcTouched;
-		//delete npcVector[npcTouched];
-		//npcVector.erase(npcVector.begin() + npcTouched);
-		//delete npcVector[npcTouched];
-		//npcVector[npcTouched] = NULL;
+		npcVector[npcTouched]->wasJumped = true;
 	}
 	if(npcTouched > -1 && mVelY < 0) {
-		mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->NPC_HEIGHT;
+		if(!isAttacking) mPosY = npcVector[npcTouched]->getPosY() + npcVector[npcTouched]->NPC_HEIGHT;
 	}
 	mBox.y = mPosY;
 }

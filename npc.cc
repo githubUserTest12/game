@@ -30,6 +30,8 @@ Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filenam
 	currentClip = &mBox;
 	isJumping = false;
 	isMoving = false;
+	wasStabbed = false;
+	wasJumped = false;
 	flip = SDL_FLIP_NONE;
 	spriteClips.resize(maxFrames);
 
@@ -71,7 +73,7 @@ Npc::~Npc() {
 	npcTexture.free();
 }
 
-void Npc::move(Tile *tiles[], float timeStep) {
+void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 
 	int tileTouched;
 
@@ -96,6 +98,18 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
+	if(checkCollision(mBox, character.getBoxPosition()) && mVelX > 0) {
+		mPosX = character.getPosX() - NPC_WIDTH;
+		if(character.isAttacking) {
+			wasStabbed = true;
+		}
+	}
+	if(checkCollision(mBox, character.getBoxPosition()) && mVelX < 0) {
+		mPosX = character.getPosX() + character.CHARACTER_WIDTH;
+		if(character.isAttacking) {
+			wasStabbed = true;
+		}
+	}
 	mBox.x = mPosX;
 
 	//Move the dot up or down
@@ -117,6 +131,12 @@ void Npc::move(Tile *tiles[], float timeStep) {
 	}
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
+	}
+	if(checkCollision(mBox, character.getBoxPosition()) && mVelY > 0) {
+		mPosY = character.getPosY() - NPC_HEIGHT;
+	}
+	if(checkCollision(mBox, character.getBoxPosition()) && mVelY < 0) {
+		mPosY = character.getPosY() + character.CHARACTER_HEIGHT;
 	}
 	mBox.y = mPosY;
 }
