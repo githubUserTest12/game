@@ -13,11 +13,13 @@ class Character {
 		static const int CHARACTER_WIDTH = 38;
 		static const int CHARACTER_HEIGHT = 55;
 		static const int ANIMATION_FRAMES = 4;
+		static const int ATTACKING_FRAMES = 8;
+		static const int TOTAL_FRAMES = ANIMATION_FRAMES + ATTACKING_FRAMES;
 		static const int SPRITESHEET_WIDTH = ANIMATION_FRAMES * CHARACTER_WIDTH;
 		//static const int SPRITESHEET_HEIGHT = 40;
 
 		LTexture characterTexture;
-		SDL_Rect spriteClips[ANIMATION_FRAMES];
+		SDL_Rect spriteClips[TOTAL_FRAMES];
 
 		//Maximum axis velocity of the character
 		const int CHARACTER_VELY = 15; // * SCREEN_FPS; // 15;
@@ -25,6 +27,7 @@ class Character {
 		const int GRAVITY_CONSTANT = 60;
 
 		bool headJump;
+		bool swordReach;
 		bool isAttacking;
 		int npcCollided;
 		SDL_Rect *currentClip = NULL;

@@ -12,6 +12,9 @@ Character::Character() {
 	mBox.h = CHARACTER_HEIGHT;
 	isJumping = false;
 	isMoving = false;
+	isAttacking = false;
+	headJump = false;
+	swordReach = false;
 	flip = SDL_FLIP_NONE;
 	currentFrame = 0;
 
@@ -31,7 +34,25 @@ Character::Character() {
 			x += CHARACTER_WIDTH + 1;
 			if(x >=  SPRITESHEET_WIDTH) {
 				x = 0;
-				y += TILE_HEIGHT;
+				y += CHARACTER_HEIGHT;
+			}
+		}
+		if(ATTACKING_FRAMES > 0) {
+			x = 0;
+			y = 106;
+			for(int i =	ANIMATION_FRAMES; i < TOTAL_FRAMES; ++i) {
+				spriteClips[i].x = x;
+				spriteClips[i].y = y;
+				spriteClips[i].w = 38;
+				spriteClips[i].h = 55;
+
+				x += CHARACTER_WIDTH + 1;
+				/*
+				if(x >= SPRITESHEET_WIDTH) {
+					x = 0;
+					y += CHARACTER_HEIGHT;
+				}
+				*/
 			}
 		}
 	}
@@ -120,7 +141,6 @@ void Character::handleEvent(SDL_Event &e) {
 				break;
 			case SDLK_f:
 				isAttacking = true;
-				std::cout << "hit" << std::endl;
 				break;
 		}
 	}
@@ -173,9 +193,15 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelX > 0) {
 		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
+		if(isAttacking) {
+			swordReach = true;
+		}
 	}
 	if(npcTouched > -1 && mVelX < 0) {
 		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
+		if(isAttacking) {
+			swordReach = true;
+		}
 	}
 	mBox.x = mPosX;
 
@@ -240,9 +266,9 @@ void Character::setCamera(SDL_Rect &camera) {
 void Character::render(SDL_Rect &camera, bool toggleParticles, int &frame) {
 	//Show the character
 	if(isAttacking) {
-		if(currentFrame / ANIMATION_FRAMES < ANIMATION_FRAMES) {
-			std::cout << "currentFrame: " << currentFrame << ", " << currentFrame / ANIMATION_FRAMES << std::endl;
-			currentClip = &spriteClips[currentFrame / ANIMATION_FRAMES];
+		if(currentFrame / ATTACKING_FRAMES < ATTACKING_FRAMES) {
+			int indexAttack = ANIMATION_FRAMES + (currentFrame / ATTACKING_FRAMES);
+			currentClip = &spriteClips[indexAttack];
 			++currentFrame;
 		}
 		else {
@@ -253,7 +279,6 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, int &frame) {
 	}
 	else {
 		if(getVelocityX() > 0) {
-			std::cout << "currentFrame: " << frame << ", " << frame / ANIMATION_FRAMES << std::endl;
 			currentClip = &spriteClips[frame / ANIMATION_FRAMES];
 			flip = SDL_FLIP_HORIZONTAL;
 		}

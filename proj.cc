@@ -858,11 +858,13 @@ restart:
 			for(unsigned int i = 0; i < npcVector.size(); ++i) {
 				delete npcVector[i];
 			}
+			npcVector.clear();
 		}
 
 		//Free resources and close SDL
 		log("closing...");
 		close(tileSet);
+		log("after...");
 		if(restart) goto restart;
 	}
 
