@@ -239,7 +239,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		if(!isAttacking) {
 			mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
 		}
-		if(mVelY > 100) headJump = true;
+		headJump = true;
 		isJumping = false;
 		npcVector[npcTouched]->wasJumped = true;
 	}

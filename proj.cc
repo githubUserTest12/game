@@ -103,7 +103,7 @@ bool init() {
 		}
 		else {
 			//Create renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);// | SDL_RENDERER_PRESENTVSYNC);
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 			if(gRenderer == NULL) {
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;
@@ -531,6 +531,9 @@ restart:
 
 			// Npc timer.
 			LTimer npcTimer;
+			LTimer animationTimer;
+			unsigned int counter = 0;
+			unsigned int oldTimer = 0;
 
 			// Start timer.
 			int countedFrames = 0;
@@ -559,6 +562,7 @@ restart:
 			int xMouse, yMouse;
 			fpsTimer.start();
 			npcTimer.start();
+			animationTimer.start();
 
 			Uint32 ticks;
 
@@ -790,7 +794,14 @@ restart:
 				}
 				
 				// Next frame.
-				++frame;
+				// XXX BTON U ?LEFT OFF HERE.
+				//std::cout << timeStep << ", " << SDL_GetTicks() << ", " << counter++ << std::endl;
+				if(oldTimer + timeStep * 100 > SDL_GetTicks()) {
+				}
+				else {
+					oldTimer = SDL_GetTicks(); 
+					++frame;
+				}
 				// Cycle.
 				if(frame / character.ANIMATION_FRAMES >= character.ANIMATION_FRAMES) frame = 0;
 
