@@ -103,7 +103,7 @@ bool init() {
 		}
 		else {
 			//Create renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);// | SDL_RENDERER_PRESENTVSYNC);
 			if(gRenderer == NULL) {
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;
@@ -126,7 +126,7 @@ bool init() {
 				}
 
 				// Initialize SDL_mixer.
-				if(Mix_OpenAudio(22050, AUDIO_U8, 1, 2048) < 0) {
+				if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
 					printf("SDL_mixer failed to initialize, error: %s\n", Mix_GetError());
 					success = false;
 				}
@@ -239,25 +239,32 @@ void close(Tile *tiles[]) {
 	}
 
 	//Free loaded images
+	log("killing particle textures...");
 	gRedTexture.free();
 	gBlueTexture.free();
 	gGreenTexture.free();
 	gShimmerTexture.free();
+	log("killing tile textures...");
 	gTileTexture.free();
+	log("killing font textures...");
 	gTextCoordinates.free();
 	gTextVelocity.free();
 	gMouseCoordinates.free();
-	gBGTexture.free();
 	gFpsTextTexture.free();
+	log("killing background/mouse textures...");
+	gBGTexture.free();
 	gButtonSpriteSheetTexture.free();
 
 	// Free music.
+	log("killing music...");
 	Mix_FreeMusic(gMusic[0]);
-	Mix_FreeMusic(gMusic[1]);
 	gMusic[0] = NULL;
+	Mix_FreeMusic(gMusic[1]);
 	gMusic[1] = NULL;
+	
 
 	//Destroy window	
+	log("killing window/renderer/font...");
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
@@ -265,6 +272,7 @@ void close(Tile *tiles[]) {
 	gFont = NULL;
 
 	//Quit SDL subsystems
+	log("quitting subsystems...");
 	Mix_Quit();
 	TTF_Quit();
 	IMG_Quit();
@@ -509,9 +517,7 @@ restart:
 			//Level camera
 			SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-			float acceleration = 1.07;
 			float avgFPS;
-			//float timeStep;
 			bool toggleParticles = true;
 			SDL_Color textColor = {136, 0, 21};
 			std::stringstream os;
@@ -644,6 +650,9 @@ restart:
 					}
 				}
 
+				// Calculate time step.
+				float timeStep = stepTimer.getTicks() / 1000.f; //1.0;
+
 				if(character.headJump == true) {
 					character.setVelocityY(0);
 					character.setVelocityY(-character.CHARACTER_VELY);
@@ -660,45 +669,11 @@ restart:
 				avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
 				if(avgFPS > 2000000) avgFPS = 0;
 
-				// Calculate time step.
-				//timeStep = stepTimer.getTicks() / 1000.f; //1.0;
-
 				// FPS text.
 				timeText.str("");
 				timeText << "FPS: " << avgFPS;
 				if(!gFpsTextTexture.loadFromRenderedText(timeText.str().c_str(), textColor)) {
 					printf("unable to render FPS texture\n");
-				}
-
-				// Gravity implementation.
-				if(character.getVelocityY() < 15) {
-					character.setVelocityY(character.getVelocityY() + acceleration);
-				}
-				if(character.getVelocityY() > 15) {
-					character.setVelocityY(15);
-				}
-
-				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->NPC_HEIGHT == 105) {
-						switch(rand() % 3) {
-							case 0:
-								npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
-								break;
-							case 1:
-								npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() - acceleration);
-								break;
-							case 2:
-								npcVector[i]->setVelocityY(0);
-								break;
-						}
-						continue;
-					}
-					if(npcVector[i]->getVelocityY() < 15) {
-						npcVector[i]->setVelocityY(npcVector[i]->getVelocityY() + acceleration);
-					}
-					if(npcVector[i]->getVelocityY() > 15) {
-						npcVector[i]->setVelocityY(15);
-					}
 				}
 
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
@@ -730,16 +705,13 @@ restart:
 
 				//Move the character.
 				log("moving character...");
-				character.move(tileSet, npcVector, 1 /*1 for now*/);
-				/*
-				for(int i = 0; i < contained; ++i) {
-					if(npcContainer[i] != NULL) {
-						npcContainer[i]->move(tileSet, 1 1 for now);
-					}
-				}
-				*/
+				character.move(tileSet, npcVector, timeStep /*1 for now*/);
+
+				// Restart step timer.
+				stepTimer.start();
+				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					npcVector[i]->move(tileSet, character, 1 /*1 for now*/);
+					npcVector[i]->move(tileSet, character, timeStep /*1 for now*/);
 					if(npcVector[i]->wasStabbed || npcVector[i]->wasJumped) {
 						delete npcVector[i];
 						npcVector.erase(npcVector.begin() + i);
@@ -755,9 +727,6 @@ restart:
 					scrollingOffset = 0;
 				}
 
-				// Restart step timer.
-				stepTimer.start();
-				
 				log("preparing font info...");
 				os.str("");
 				os << character.getBoxPosition().x << ", " << character.getBoxPosition().y;

@@ -22,9 +22,8 @@ class Character {
 		SDL_Rect spriteClips[TOTAL_FRAMES];
 
 		//Maximum axis velocity of the character
-		const int CHARACTER_VELY = 15; // * SCREEN_FPS; // 15;
-		const int CHARACTER_VELX = 10; // * SCREEN_FPS; //10;
-		const int GRAVITY_CONSTANT = 60;
+		const int CHARACTER_VELY = 15 * 60; // * SCREEN_FPS; // 15;
+		const int CHARACTER_VELX = 10 * 60; // * SCREEN_FPS; //10;
 
 		bool headJump;
 		bool isAttacking;

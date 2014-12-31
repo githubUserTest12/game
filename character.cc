@@ -203,6 +203,13 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	}
 	mBox.x = mPosX;
 
+	// Gravity.
+	if(mVelY < 900) {
+		mVelY += 3600 * timeStep;
+	}
+	else if(mVelY > 900) {
+		mVelY = 900;
+	}
 	//Move the character up or down
 	mPosY += mVelY * timeStep;
 
@@ -222,6 +229,8 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
+	else if(mPosY + CHARACTER_HEIGHT > LEVEL_HEIGHT) {
+	}
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
@@ -230,7 +239,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		if(!isAttacking) {
 			mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
 		}
-		headJump = true;
+		if(mVelY > 100) headJump = true;
 		isJumping = false;
 		npcVector[npcTouched]->wasJumped = true;
 	}

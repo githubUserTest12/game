@@ -14,8 +14,8 @@ class Npc {
 	public:
 
 		//Maximum axis velocity of the dot
-		int NPC_VELY = 15;
-		int NPC_VELX = 1;
+		int NPC_VELY = 15 * 60;
+		int NPC_VELX = 1 * 60;
 
 		//The dimensions of the dot
 		const int NPC_WIDTH;

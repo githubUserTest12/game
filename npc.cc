@@ -112,6 +112,28 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 	}
 	mBox.x = mPosX;
 
+
+	// Gravity.
+	if(NPC_HEIGHT == 105) {
+		switch(rand() % 3) {
+			case 0:
+				mVelY += 3600 * timeStep;
+				break;
+			case 1:
+				mVelY -= 3600 * timeStep;
+				break;
+			case 2:
+				mVelY = 0;
+				break;
+		}
+	}
+	else if(mVelY < 900) {
+		mVelY += 3600 * timeStep;
+	}
+	else if(mVelY > 900) {
+		mVelY = 900;
+	}
+
 	//Move the dot up or down
 	mPosY += mVelY * timeStep;
 
