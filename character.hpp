@@ -5,6 +5,7 @@
 #include "tiles.hpp"
 #include "npc.hpp"
 #include "particle.hpp"
+#include "timer.hpp"
 
 class Character {
 	public:
@@ -29,6 +30,7 @@ class Character {
 		bool isAttacking;
 		SDL_Rect *currentClip = NULL;
 		int currentFrame;
+		LTimer attackingTimer;
 
 		//Initializes the variables allocates particles.
 		Character();
@@ -46,7 +48,7 @@ class Character {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the character on the screen
-		void render(SDL_Rect &camera, bool toggleParticles, int &frame);
+		void render(SDL_Rect &camera, bool toggleParticles, Uint32 &frame);
 
 		bool isJumping;
 		bool isMoving;

@@ -532,14 +532,13 @@ restart:
 			// Npc timer.
 			LTimer npcTimer;
 			LTimer animationTimer;
-			unsigned int counter = 0;
-			unsigned int oldTimer = 0;
+			//unsigned int oldTimer = 0;
 
 			// Start timer.
 			int countedFrames = 0;
 
 			// Current animation frame.
-			int frame = 0;
+			Uint32 frame = 0;
 
 			// Background scrolling offset.
 			int scrollingOffset = 0;
@@ -565,6 +564,7 @@ restart:
 			animationTimer.start();
 
 			Uint32 ticks;
+			Uint32 seconds;
 
 			log("beginning main loop...");
 			//While application is running
@@ -572,7 +572,6 @@ restart:
 
 				// introduce lag.
 				//system("./clear.sh");
-
 
 				ticks = SDL_GetTicks();
 
@@ -663,7 +662,7 @@ restart:
 					character.headJump = false;
 				}
 
-				Uint32 seconds = ticks / 1000.f;
+				seconds = ticks / 1000.f;
 				if(seconds % 10 == 0) {
 					logger.close();
 					logger.open("log.txt");
@@ -777,6 +776,7 @@ restart:
 
 				//Render character
 				//Uint32 sprite = seconds % 4;
+				frame = (ticks / 100) % 4;
 
 				log("rendering character...");
 				character.render(camera, toggleParticles, frame);
@@ -785,7 +785,7 @@ restart:
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
 					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == 105) {
-						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame / npcVector[i]->ANIMATION_FRAMES];
+						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame];
 					}
 					else { 
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[1]; 
@@ -795,15 +795,9 @@ restart:
 				
 				// Next frame.
 				// XXX BTON U ?LEFT OFF HERE.
-				//std::cout << timeStep << ", " << SDL_GetTicks() << ", " << counter++ << std::endl;
-				if(oldTimer + timeStep * 100 > SDL_GetTicks()) {
-				}
-				else {
-					oldTimer = SDL_GetTicks(); 
-					++frame;
-				}
+				//++frame;
 				// Cycle.
-				if(frame / character.ANIMATION_FRAMES >= character.ANIMATION_FRAMES) frame = 0;
+				//if(frame / character.ANIMATION_FRAMES >= character.ANIMATION_FRAMES) frame = 0;
 
         //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
 				// Render buttons.

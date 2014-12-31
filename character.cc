@@ -16,7 +16,7 @@ Character::Character() {
 	headJump = false;
 	//npcStabbed = 0;
 	flip = SDL_FLIP_NONE;
-	currentFrame = 0;
+	currentFrame = ANIMATION_FRAMES;
 
 	//Load character texture
 	if(!characterTexture.loadFromFile("character4.png")) {
@@ -269,27 +269,26 @@ void Character::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Character::render(SDL_Rect &camera, bool toggleParticles, int &frame) {
+void Character::render(SDL_Rect &camera, bool toggleParticles, Uint32 &frame) {
 	//Show the character
 	if(isAttacking) {
-		if(currentFrame / ATTACKING_FRAMES < ATTACKING_FRAMES) {
-			int indexAttack = ANIMATION_FRAMES + (currentFrame / ATTACKING_FRAMES);
-			currentClip = &spriteClips[indexAttack];
-			++currentFrame;
-		}
-		else {
-			currentFrame = 0;
+		if(!attackingTimer.isStarted()) attackingTimer.start();
+		currentClip = &spriteClips[currentFrame];
+		currentFrame = ((attackingTimer.getTicks() / 100) % 12) + 4;
+		if(currentFrame > TOTAL_FRAMES - 1) {
+			attackingTimer.stop();
+			currentFrame = 4;
 			isAttacking = false;
 			currentClip = &spriteClips[0];
 		}
 	}
 	else {
 		if(getVelocityX() > 0) {
-			currentClip = &spriteClips[frame / ANIMATION_FRAMES];
+			currentClip = &spriteClips[frame];
 			flip = SDL_FLIP_HORIZONTAL;
 		}
 		else if(getVelocityX() < 0) {
-			currentClip = &spriteClips[frame / ANIMATION_FRAMES];
+			currentClip = &spriteClips[frame];
 			flip = SDL_FLIP_NONE;
 		}
 		else currentClip = &spriteClips[1];
