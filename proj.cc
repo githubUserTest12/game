@@ -257,10 +257,10 @@ void close(Tile *tiles[]) {
 
 	// Free music.
 	log("killing music...");
-	Mix_FreeMusic(gMusic[0]);
-	gMusic[0] = NULL;
 	Mix_FreeMusic(gMusic[1]);
 	gMusic[1] = NULL;
+	Mix_FreeMusic(gMusic[0]);
+	gMusic[0] = NULL;
 	
 
 	//Destroy window	
@@ -679,29 +679,45 @@ restart:
 					printf("unable to render FPS texture\n");
 				}
 
+				
+				for(unsigned int i = 0; i < npcVector.size(); ++i) {
+					if(npcVector[i]->wasStabbed) {
+						if(npcVector[i]->wasAttackedTimer.getTicks() > 300) {
+							npcVector[i]->setVelocityX(0);
+							npcVector[i]->wasStabbed = false;
+							npcVector[i]->wasAttackedTimer.stop();
+						}
+					}
+				}
+
+				// AI.
+				/*
 				if((npcTimer.getTicks() / 1000) != 0 && (npcTimer.getTicks() / 1000) % 2  == 0) {
 					for(unsigned int i = 0; i < npcVector.size(); ++i) {
-						switch(rand() % 3) {
-							case 0:
-								npcVector[i]->isMoving = true;
-								npcVector[i]->setVelocityX(-npcVector[i]->NPC_VELX);
-								npcVector[i]->flip = SDL_FLIP_NONE;
-								break;
-							case 1:
-								npcVector[i]->isMoving = true;
-								npcVector[i]->setVelocityX(npcVector[i]->NPC_VELX);
-								npcVector[i]->flip = SDL_FLIP_HORIZONTAL;
-								break;
-							case 2:
-								npcVector[i]->isMoving = false;
-								npcVector[i]->setVelocityX(0);
-								break;
-							default:
-								break;
+						if(!npcVector[i]->wasStabbed) {
+							switch(rand() % 3) {
+								case 0:
+									npcVector[i]->isMoving = true;
+									npcVector[i]->setVelocityX(-npcVector[i]->NPC_VELX);
+									npcVector[i]->flip = SDL_FLIP_NONE;
+									break;
+								case 1:
+									npcVector[i]->isMoving = true;
+									npcVector[i]->setVelocityX(npcVector[i]->NPC_VELX);
+									npcVector[i]->flip = SDL_FLIP_HORIZONTAL;
+									break;
+								case 2:
+									npcVector[i]->isMoving = false;
+									npcVector[i]->setVelocityX(0);
+									break;
+								default:
+									break;
+							}
 						}
 					}
 					npcTimer.start();
 				}
+				*/
 
         // Whole screen viewport.
         //SDL_RenderSetViewport(gRenderer, &wholeScreenViewport);
@@ -715,10 +731,13 @@ restart:
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
 					npcVector[i]->move(tileSet, character, timeStep /*1 for now*/);
-					if(npcVector[i]->wasStabbed || npcVector[i]->wasJumped) {
+					if(npcVector[i]->wasJumped) {
 						delete npcVector[i];
 						npcVector.erase(npcVector.begin() + i);
 					}
+					//if(npcVector[i]->wasStabbed) {
+						//npcVector[i]->setVelocityX(15 * 60);
+					//}
 				}
 
 				log("setting camera...");

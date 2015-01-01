@@ -10,6 +10,7 @@ Character::Character() {
 	mBox.y = 0;
 	mBox.w = CHARACTER_WIDTH;
 	mBox.h = CHARACTER_HEIGHT;
+	mWeapon = mBox;
 	isJumping = false;
 	isMoving = false;
 	isAttacking = false;
@@ -185,6 +186,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		}
 	}
 	mBox.x = mPosX;
+	mWeapon.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
 		mPosX = tiles[tileTouched]->getBox().x - CHARACTER_WIDTH;
@@ -192,14 +194,56 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	if(tileTouched > -1 && mVelX < 0) {
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
+
+	if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mWeapon.x = mPosX + 50;
+	else if(isAttacking && flip == SDL_FLIP_NONE) mWeapon.x = mPosX - 50;
+	npcTouched = touchesNpc(mWeapon, npcVector);
+	// Handle weapon.
+	if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
+		std::cout << "weapon hit right!" << std::endl;
+		npcVector[npcTouched]->wasStabbed = true;
+		npcVector[npcTouched]->setVelocityX(15 * 60);
+		npcVector[npcTouched]->wasAttackedTimer.start();
+	}
+	else if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_NONE) {
+		std::cout << "weapon hit left!" << std::endl;
+		npcVector[npcTouched]->wasStabbed = true;
+		npcVector[npcTouched]->setVelocityX(-15 * 60);
+		npcVector[npcTouched]->wasAttackedTimer.start();
+	}
+	/*
+	if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mBox.x = mPosX + 50;
+	else if(isAttacking && flip == SDL_FLIP_NONE) mBox.x = mPosX - 50;
+	npcTouched = touchesNpc(mBox, npcVector);
+	if(npcTouched >-1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
+		npcVector[npcTouched]->wasStabbed = true;
+		npcVector[npcTouched]->setVelocityX(15 * 60);
+		npcVector[npcTouched]->wasAttackedTimer.start();
+	}
+	else if(npcTouched >-1 && isAttacking && flip == SDL_FLIP_NONE) {
+		npcVector[npcTouched]->wasStabbed = true;
+		npcVector[npcTouched]->setVelocityX(-15 * 60);
+		npcVector[npcTouched]->wasAttackedTimer.start();
+	}
+	*/
+
+	// Handle character.
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelX > 0) {
-		if(isAttacking) npcVector[npcTouched]->wasStabbed = true;
-		else mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
+		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
+		if(isAttacking) {
+			npcVector[npcTouched]->wasStabbed = true;
+			npcVector[npcTouched]->setVelocityX(15 * 60);
+			npcVector[npcTouched]->wasAttackedTimer.start();
+		}
 	}
 	if(npcTouched > -1 && mVelX < 0) {
-		if(isAttacking) npcVector[npcTouched]->wasStabbed = true;
-		else mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
+		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
+		if(isAttacking) {
+			npcVector[npcTouched]->wasStabbed = true;
+			npcVector[npcTouched]->setVelocityX(-15 * 60);
+			npcVector[npcTouched]->wasAttackedTimer.start();
+		}
 	}
 	mBox.x = mPosX;
 
@@ -223,6 +267,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		}
 	} 
 	mBox.y = mPosY;
+	mWeapon.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
 		mVelY = 0;
@@ -239,7 +284,8 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		if(!isAttacking) {
 			mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
 		}
-		headJump = true;
+		// Hack for now, don't want to decrease frame rate cap.
+		if(mVelY > 60) headJump = true;
 		isJumping = false;
 		npcVector[npcTouched]->wasJumped = true;
 	}

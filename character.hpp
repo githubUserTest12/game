@@ -93,6 +93,9 @@ class Character {
 
 		//Collision box of the character
 		SDL_Rect mBox;
+
+		//Collision box of weapon.
+		SDL_Rect mWeapon;
 		float mPosX, mPosY;
 
 		//The velocity of the character

@@ -5,6 +5,7 @@
 #include "globals.hpp"
 #include "texture.hpp"
 #include "character.hpp"
+#include "timer.hpp"
 
 extern int touchesWall(SDL_Rect box, Tile *tiles[]);
 
@@ -28,6 +29,7 @@ class Npc {
 
 		bool wasStabbed;
 		bool wasJumped;
+		LTimer wasAttackedTimer;
 
 		// Texture.
 		LTexture npcTexture;
