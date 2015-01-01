@@ -17,10 +17,12 @@ Character::Character() {
 	headJump = false;
 	//npcStabbed = 0;
 	flip = SDL_FLIP_NONE;
-	currentFrame = ANIMATION_FRAMES;
+	attackingFrame = 0;
+	walkingFrame = 0;
+	frameRate = 40;
 
 	//Load character texture
-	if(!characterTexture.loadFromFile("character4.png")) {
+	if(!characterTexture.loadFromFile("zerowalk.png")) {
 		printf("Failed to load character texture!\n");
 	}
 	else {
@@ -38,24 +40,24 @@ Character::Character() {
 				y += CHARACTER_HEIGHT;
 			}
 		}
+		/*
 		if(ATTACKING_FRAMES > 0) {
 			x = 0;
-			y = 106;
-			for(int i =	ANIMATION_FRAMES; i < TOTAL_FRAMES; ++i) {
+			y = 0;
+			for(int i =	0; i < ATTACKING_FRAMES; ++i) {
 				spriteClips[i].x = x;
 				spriteClips[i].y = y;
-				spriteClips[i].w = 38;
-				spriteClips[i].h = 55;
+				spriteClips[i].w = 50;
+				spriteClips[i].h = 50;
 
-				x += 38 + 1;
-				/*
+				x += CHARACTER_WIDTH;
 				if(x >= SPRITESHEET_WIDTH) {
 					x = 0;
 					y += CHARACTER_HEIGHT;
 				}
-				*/
 			}
 		}
+		*/
 	}
 	currentClip = &spriteClips[0];
 
@@ -195,55 +197,42 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 
-	if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mWeapon.x = mPosX + 50;
-	else if(isAttacking && flip == SDL_FLIP_NONE) mWeapon.x = mPosX - 50;
+	if(isAttacking && flip == SDL_FLIP_NONE) mWeapon.x = mPosX + 50;
+	else if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mWeapon.x = mPosX - 50;
 	npcTouched = touchesNpc(mWeapon, npcVector);
 	// Handle weapon.
-	if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
-		std::cout << "weapon hit right!" << std::endl;
+	if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_NONE) {
 		npcVector[npcTouched]->wasStabbed = true;
 		npcVector[npcTouched]->setVelocityX(15 * 60);
 		npcVector[npcTouched]->wasAttackedTimer.start();
 	}
-	else if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_NONE) {
-		std::cout << "weapon hit left!" << std::endl;
+	else if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
 		npcVector[npcTouched]->wasStabbed = true;
 		npcVector[npcTouched]->setVelocityX(-15 * 60);
 		npcVector[npcTouched]->wasAttackedTimer.start();
 	}
-	/*
-	if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mBox.x = mPosX + 50;
-	else if(isAttacking && flip == SDL_FLIP_NONE) mBox.x = mPosX - 50;
-	npcTouched = touchesNpc(mBox, npcVector);
-	if(npcTouched >-1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
-		npcVector[npcTouched]->wasStabbed = true;
-		npcVector[npcTouched]->setVelocityX(15 * 60);
-		npcVector[npcTouched]->wasAttackedTimer.start();
-	}
-	else if(npcTouched >-1 && isAttacking && flip == SDL_FLIP_NONE) {
-		npcVector[npcTouched]->wasStabbed = true;
-		npcVector[npcTouched]->setVelocityX(-15 * 60);
-		npcVector[npcTouched]->wasAttackedTimer.start();
-	}
-	*/
 
 	// Handle character.
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelX > 0) {
 		mPosX = npcVector[npcTouched]->getPosX() - CHARACTER_WIDTH;
+		/*
 		if(isAttacking) {
 			npcVector[npcTouched]->wasStabbed = true;
 			npcVector[npcTouched]->setVelocityX(15 * 60);
 			npcVector[npcTouched]->wasAttackedTimer.start();
 		}
+		*/
 	}
 	if(npcTouched > -1 && mVelX < 0) {
 		mPosX = npcVector[npcTouched]->getPosX() + npcVector[npcTouched]->NPC_WIDTH;
+		/*
 		if(isAttacking) {
 			npcVector[npcTouched]->wasStabbed = true;
 			npcVector[npcTouched]->setVelocityX(-15 * 60);
 			npcVector[npcTouched]->wasAttackedTimer.start();
 		}
+		*/
 	}
 	mBox.x = mPosX;
 
@@ -315,40 +304,71 @@ void Character::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Character::render(SDL_Rect &camera, bool toggleParticles, Uint32 &frame) {
+void Character::render(SDL_Rect &camera, bool toggleParticles) {
 	//Show the character
 	if(isAttacking) {
 		if(!attackingTimer.isStarted()) attackingTimer.start();
-		currentClip = &spriteClips[currentFrame];
-		currentFrame = ((attackingTimer.getTicks() / 100) % 12) + 4;
-		if(currentFrame > TOTAL_FRAMES - 1) {
+		currentClip = &spriteClips[attackingFrame];
+		attackingFrame = (attackingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
+		if(attackingFrame > 0) firstAttack = true;
+		if(attackingFrame % ANIMATION_FRAMES == 0 && firstAttack == true) {
+			firstAttack = false;
 			attackingTimer.stop();
-			currentFrame = 4;
+			attackingFrame = 0;
 			isAttacking = false;
 			currentClip = &spriteClips[0];
 		}
 	}
 	else {
+		// Really complicated implementation...
+
 		if(getVelocityX() > 0) {
-			currentClip = &spriteClips[frame];
-			flip = SDL_FLIP_HORIZONTAL;
-		}
-		else if(getVelocityX() < 0) {
-			currentClip = &spriteClips[frame];
+			if(!walkingTimer.isStarted()) walkingTimer.start();
+			currentClip = &spriteClips[walkingFrame];
+			if(firstWalk == true) {
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
+			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
+			if(walkingFrame > 0) firstWalk = true;
+			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
+				walkingTimer.start();
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
 			flip = SDL_FLIP_NONE;
 		}
-		else currentClip = &spriteClips[1];
+		else if(getVelocityX() < 0) {
+			if(!walkingTimer.isStarted()) walkingTimer.start();
+			currentClip = &spriteClips[walkingFrame];
+			if(firstWalk == true) {
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
+			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
+			if(walkingFrame > 0) firstWalk = true;
+			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
+				walkingTimer.start();
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
+			flip = SDL_FLIP_HORIZONTAL;
+		}
+		else {
+			walkingFrame = 0;
+			walkingTimer.stop();
+			firstWalk = false;
+			currentClip = &spriteClips[0];
+		}
 	}
 	// XXX BTON - YOU LEFT OFF HERE
 	//currentClip = &spriteClips[0];
 	// XXX BTON - CHANGE SOMETHING HERE.
 
-	if(flip == SDL_FLIP_HORIZONTAL) {
+	dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
+	dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
+	if(flip == SDL_FLIP_NONE) {
 		// To adjust for clipping size.
-		characterTexture.render((int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, 0, NULL, flip);
+		characterTexture.render((int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);
 	}
 	else {
-		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, 0, NULL, flip);
+		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);
 	}
 
 	// Show particles on top of character.

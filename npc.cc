@@ -100,7 +100,7 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 	}
 	if(checkCollision(mBox, character.getBoxPosition()) && mVelX > 0) {
 		mPosX = character.getPosX() - NPC_WIDTH;
-		if(character.isAttacking) {
+		if(character.isAttacking && character.flip == SDL_FLIP_HORIZONTAL) {
 			mPosX = character.getPosX() - NPC_WIDTH;
 			wasStabbed = true;
 			mVelX = -15 * 60;
@@ -109,7 +109,7 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 	}
 	else if(checkCollision(mBox, character.getBoxPosition()) && mVelX < 0) {
 		mPosX = character.getPosX() + character.CHARACTER_WIDTH;
-		if(character.isAttacking) {
+		if(character.isAttacking && character.flip == SDL_FLIP_NONE) {
 			mPosX = character.getPosX() + character.CHARACTER_WIDTH;
 			wasStabbed = true;
 			mVelX = 15 * 60;
@@ -161,7 +161,7 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
 	if(checkCollision(mBox, character.getBoxPosition()) && mVelY > 0) {
-		//if(!character.isAttacking) mPosY = character.getPosY() - NPC_HEIGHT;
+		mPosY = character.getPosY() - NPC_HEIGHT;
 	}
 	if(checkCollision(mBox, character.getBoxPosition()) && mVelY < 0) {
 		if(!character.isAttacking) mPosY = character.getPosY() + character.CHARACTER_HEIGHT;
