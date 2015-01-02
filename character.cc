@@ -405,12 +405,12 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	else if(isAttacking && flip == SDL_FLIP_HORIZONTAL) mWeapon.x = mPosX - 50;
 	npcTouched = touchesNpc(mWeapon, npcVector);
 	// Handle weapon.
-	if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_NONE) {
+	if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_NONE && (attackingFrame >= 4 && attackingFrame <= 7)) {
 		npcVector[npcTouched]->wasStabbed = true;
 		npcVector[npcTouched]->setVelocityX(15 * 60);
 		npcVector[npcTouched]->wasAttackedTimer.start();
 	}
-	else if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_HORIZONTAL) {
+	else if(npcTouched > -1 && isAttacking && flip == SDL_FLIP_HORIZONTAL && (attackingFrame >= 4 && attackingFrame <= 7)) {
 		npcVector[npcTouched]->wasStabbed = true;
 		npcVector[npcTouched]->setVelocityX(-15 * 60);
 		npcVector[npcTouched]->wasAttackedTimer.start();
@@ -516,7 +516,7 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		firstWalk = false;
 		if(!attackingTimer.isStarted()) attackingTimer.start();
 		currentClip = &attackClips[attackingFrame];
-		attackingFrame = (attackingTimer.getTicks() / frameRate) % ATTACKING_FRAMES;
+		attackingFrame = (attackingTimer.getTicks() / 50) % ATTACKING_FRAMES;
 		if(attackingFrame > 0) firstAttack = true;
 		if(attackingFrame % ANIMATION_FRAMES == 0 && firstAttack == true) {
 			firstAttack = false;
@@ -612,6 +612,15 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 	else dstrect.x = (int) (mBox.x - camera.x);
 	dstrect.y = (int) (mBox.y - camera.y);
 
+	if(isAttacking) { 
+		if(flip == SDL_FLIP_HORIZONTAL) {
+			dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
+		}
+		else dstrect.x = mBox.x - camera.x;
+		dstrect.y = mBox.y - camera.y;
+		dstrect.h = mBox.h;
+	}
+
 	//dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
 	//dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
 	if(flip == SDL_FLIP_NONE) {
@@ -619,7 +628,7 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		characterTexture.render(0 /*(int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH*/, 0 /*(int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT*/, currentClip, dstrect, 0, NULL, flip);
 	}
 	else {
-		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);
+		characterTexture.render( 0 /*(int)(mPosX) - camera.x */, 0 /*(int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT */, currentClip, dstrect, 0, NULL, flip);
 	}
 
 	// Show particles on top of character.
