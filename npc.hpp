@@ -30,6 +30,7 @@ class Npc {
 		bool wasStabbed;
 		bool wasJumped;
 		LTimer wasAttackedTimer;
+		SDL_Rect dstrect = { 0, 0, NPC_WIDTH, NPC_HEIGHT };
 
 		// Texture.
 		LTexture npcTexture;
@@ -49,7 +50,7 @@ class Npc {
 		//void setCamera(SDL_Rect &camera);
 
 		//Shows the dot on the screen
-		void render(SDL_Rect &camera, bool toggleParticles = false, SDL_Rect *clip = NULL);
+		void render(SDL_Rect &camera, bool toggleParticles = false, SDL_Rect *clip = NULL, float scale = 1);
 
 		bool isJumping;
 		bool isMoving;

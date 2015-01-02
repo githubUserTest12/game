@@ -12,7 +12,7 @@ class Character {
 		//The dimensions of the character
 
 		static const int CHARACTER_WIDTH = 65;
-		static const int CHARACTER_HEIGHT = 75;
+		static const int CHARACTER_HEIGHT = 80;
 		static const int ANIMATION_FRAMES = 16;
 		static const int ATTACKING_FRAMES = 0;
 		static const int TOTAL_FRAMES = ANIMATION_FRAMES + ATTACKING_FRAMES;
@@ -24,7 +24,7 @@ class Character {
 
 		//Maximum axis velocity of the character
 		const int CHARACTER_VELY = 15 * 60; // * SCREEN_FPS; // 15;
-		const int CHARACTER_VELX = 10 * 60; // * SCREEN_FPS; //10;
+		const int CHARACTER_VELX = 7 * 60; // * SCREEN_FPS; //10;
 
 		bool headJump;
 		bool isAttacking;

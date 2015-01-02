@@ -466,90 +466,91 @@ restart:
 			character.spriteClips[0].x = 0;
 			character.spriteClips[0].y = 1;
 			character.spriteClips[0].w = 36;
-			character.spriteClips[0].h = 50;
+			character.spriteClips[0].h = 48;
 
 			character.spriteClips[1].x = 39;
 			character.spriteClips[1].y = 1;
 			character.spriteClips[1].w = 38;
-			character.spriteClips[1].h = 50;
+			character.spriteClips[1].h = 48;
 
 			character.spriteClips[2].x = 79;
 			character.spriteClips[2].y = 1;
 			character.spriteClips[2].w = 46;
-			character.spriteClips[2].h = 50;
+			character.spriteClips[2].h = 48;
 
 			character.spriteClips[3].x = 129;
 			character.spriteClips[3].y = 1;
 			character.spriteClips[3].w = 44;
-			character.spriteClips[3].h = 50;
+			character.spriteClips[3].h = 48;
 
 			character.spriteClips[4].x = 175;
 			character.spriteClips[4].y = 1;
 			character.spriteClips[4].w = 40;
-			character.spriteClips[4].h = 50;
+			character.spriteClips[4].h = 48;
 
 			character.spriteClips[5].x = 223;
 			character.spriteClips[5].y = 1;
 			character.spriteClips[5].w = 45;
-			character.spriteClips[5].h = 50;
+			character.spriteClips[5].h = 48;
 
 			character.spriteClips[6].x = 269;
 			character.spriteClips[6].y = 1;
 			character.spriteClips[6].w = 49;
-			character.spriteClips[6].h = 50;
+			character.spriteClips[6].h = 48;
 
 			character.spriteClips[7].x = 321;
 			character.spriteClips[7].y = 1;
 			character.spriteClips[7].w = 45;
-			character.spriteClips[7].h = 50;
+			character.spriteClips[7].h = 48;
 
 			character.spriteClips[8].x = 368;
 			character.spriteClips[8].y = 1;
 			character.spriteClips[8].w = 50;
-			character.spriteClips[8].h = 50;
+			character.spriteClips[8].h = 48;
 
 			character.spriteClips[9].x = 422;
 			character.spriteClips[9].y = 1;
 			character.spriteClips[9].w = 46;
-			character.spriteClips[9].h = 50;
+			character.spriteClips[9].h = 48;
 
 			character.spriteClips[10].x = 470;
 			character.spriteClips[10].y = 1;
 			character.spriteClips[10].w = 43;
-			character.spriteClips[10].h = 50;
+			character.spriteClips[10].h = 48;
 
 			character.spriteClips[11].x = 516;
 			character.spriteClips[11].y = 1;
 			character.spriteClips[11].w = 42;
-			character.spriteClips[11].h = 50;
+			character.spriteClips[11].h = 48;
 
 			character.spriteClips[12].x = 561;
 			character.spriteClips[12].y = 1;
 			character.spriteClips[12].w = 45;
-			character.spriteClips[12].h = 50;
+			character.spriteClips[12].h = 48;
 
 			character.spriteClips[13].x = 607;
 			character.spriteClips[13].y = 1;
 			character.spriteClips[13].w = 50;
-			character.spriteClips[13].h = 50;
+			character.spriteClips[13].h = 48;
 
 			character.spriteClips[14].x = 661;
 			character.spriteClips[14].y = 1;
 			character.spriteClips[14].w = 48;
-			character.spriteClips[14].h = 50;
+			character.spriteClips[14].h = 48;
 
 			character.spriteClips[15].x = 711;
 			character.spriteClips[15].y = 1;
 			character.spriteClips[15].w = 50;
-			character.spriteClips[15].h = 50;
+			character.spriteClips[15].h = 48;
+			float scale = 1.72;
 
 			//vector implementation
 			std::vector<Npc *> npcVector;
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character3.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 38) + TILE_WIDTH, 0, 38, 55, 4, "character1.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - 76) + TILE_WIDTH, 0, 76, 105, 4, "character4.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character3.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character1.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (76 * scale)) + TILE_WIDTH, 0, (int) (76 * scale), (int) (105 * scale), 4, "character4.png"));
 
 			npcVector[4]->spriteClips[0].x = 0;
 			npcVector[4]->spriteClips[0].y = 0;
@@ -675,7 +676,7 @@ restart:
 						int random = rand() % 4 + 1;
 						os << "character" << random << ".png";
 						if(random == 4) {
-							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 76, 105, 4, os.str()));
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int)(76 * scale), (int)(105 * scale), 4, os.str()));
 
 							npcVector[npcVector.size() - 1]->spriteClips[0].x = 0;
 							npcVector[npcVector.size() - 1]->spriteClips[0].y = 0;
@@ -698,7 +699,7 @@ restart:
 							npcVector[npcVector.size() - 1]->spriteClips[3].h = 105;
 						}
 						else {
-							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, 38, 55, 4, os.str()));
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int) (scale * 38), (int) (scale * 55), 4, os.str()));
 						}
 					}
 
@@ -861,13 +862,14 @@ restart:
 				log("rendering npc...");
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == 105) {
+					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == (int)(105 * scale)) {
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame];
 					}
 					else { 
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[1]; 
 					}
-					npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip);
+					if(npcVector[i]->NPC_HEIGHT == (int)(105 * scale)) npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, scale);
+					else npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, scale);
 				}
 				
 				// Next frame.

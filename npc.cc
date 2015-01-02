@@ -1,16 +1,31 @@
 #include "npc.hpp"
 #include <iostream>
 
-void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip) {
+void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip, float scale) {
 	//Show the dot
 	if(checkCollision(camera, mBox)) {
-		//npcTexture.render(mBox.x - camera.x, mBox.y - camera.y, clip, 0, NULL, flip);
-		if(flip == SDL_FLIP_HORIZONTAL) {
-			// To adjust for clipping size.
-			npcTexture.render((int)(mPosX) - camera.x - clip->w + NPC_WIDTH, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, 0, NULL, flip);
+		if(scale != 1.0) {
+			dstrect.w = (int) (clip->w * scale);
+			dstrect.h = (int) (clip->h * scale);
 		}
 		else {
-			npcTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, 0, NULL, flip);
+			dstrect.w = clip->w;
+			dstrect.h = clip->h;
+		}
+		if(flip == SDL_FLIP_HORIZONTAL) {
+			dstrect.x = (int)(mPosX) - camera.x - dstrect.w + NPC_WIDTH;
+		}
+		else {
+			dstrect.x = (int)(mPosX) - camera.x;
+		}
+		dstrect.y = (int)(mPosY) - camera.y - dstrect.h + NPC_HEIGHT;
+
+		if(flip == SDL_FLIP_HORIZONTAL) {
+			// To adjust for clipping size.
+			npcTexture.render((int)(mPosX) - camera.x - clip->w + NPC_WIDTH, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, dstrect, 0, NULL, flip);
+		}
+		else {
+			npcTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - clip->h + NPC_HEIGHT, clip, dstrect, 0, NULL, flip);
 		}
 	}
 
@@ -45,10 +60,10 @@ Npc::Npc(int x, int y, int width, int height, int maxFrames, std::string filenam
 		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
 			spriteClips[i].x = x;
 			spriteClips[i].y = y;
-			spriteClips[i].w = NPC_WIDTH;
-			spriteClips[i].h = NPC_HEIGHT;
+			spriteClips[i].w = 38;
+			spriteClips[i].h = 55;
 
-			x += NPC_WIDTH + 1;
+			x += 38 + 1;
 			if(x >= SPRITESHEET_WIDTH) {
 				x = 0;
 				y += TILE_HEIGHT;
@@ -120,7 +135,7 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 
 
 	// Gravity.
-	if(NPC_HEIGHT == 105) {
+	if(NPC_HEIGHT == (int) (105 * 1.72)) {
 		switch(rand() % 3) {
 			case 0:
 				mVelY += 3600 * timeStep;
