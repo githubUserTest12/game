@@ -29,7 +29,7 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 	else {
 
 		// Walking.
-		spriteClips[0].x = 0;
+		spriteClips[0].x = 1;
 		spriteClips[0].y = 1;
 		spriteClips[0].w = 36;
 		spriteClips[0].h = 48;
@@ -96,7 +96,7 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 
 		spriteClips[13].x = 607;
 		spriteClips[13].y = 1;
-		spriteClips[13].w = 50;
+		spriteClips[13].w = 48;
 		spriteClips[13].h = 48;
 
 		spriteClips[14].x = 661;
@@ -169,6 +169,66 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 		fallClips[5].y = 71;
 		fallClips[5].w = 40;
 		fallClips[5].h = 59;
+
+		attackClips[0].x = 7;
+		attackClips[0].y = 173;
+		attackClips[0].w = 39;
+		attackClips[0].h = 46;
+
+		attackClips[1].x = 52;
+		attackClips[1].y = 169;
+		attackClips[1].w = 46;
+		attackClips[1].h = 50;
+
+		attackClips[2].x = 102;
+		attackClips[2].y = 158;
+		attackClips[2].w = 49;
+		attackClips[2].h = 63;
+
+		attackClips[3].x = 157;
+		attackClips[3].y = 158;
+		attackClips[3].w = 78;
+		attackClips[3].h = 62;
+
+		attackClips[4].x = 242;
+		attackClips[4].y = 158;
+		attackClips[4].w = 87;
+		attackClips[4].h = 60;
+
+		attackClips[5].x = 337;
+		attackClips[5].y = 170;
+		attackClips[5].w = 91;
+		attackClips[5].h = 48;
+
+		attackClips[6].x = 437;
+		attackClips[6].y = 169;
+		attackClips[6].w = 83;
+		attackClips[6].h = 49;
+
+		attackClips[7].x = 527;
+		attackClips[7].y = 173;
+		attackClips[7].w = 70;
+		attackClips[7].h = 45;
+
+		attackClips[8].x = 607;
+		attackClips[8].y = 173;
+		attackClips[8].w = 59;
+		attackClips[8].h = 45;
+
+		attackClips[9].x = 677;
+		attackClips[9].y = 172;
+		attackClips[9].w = 52;
+		attackClips[9].h = 45;
+
+		attackClips[10].x = 737;
+		attackClips[10].y = 172;
+		attackClips[10].w = 45;
+		attackClips[10].h = 45;
+
+		attackClips[11].x = 802;
+		attackClips[11].y = 170;
+		attackClips[11].w = 49;
+		attackClips[11].h = 45;
 
 		/*
 		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
@@ -452,9 +512,11 @@ void Character::setCamera(SDL_Rect &camera) {
 void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, float heightScale) {
 	//Show the character
 	if(isAttacking) {
+		walkingTimer.stop();
+		firstWalk = false;
 		if(!attackingTimer.isStarted()) attackingTimer.start();
-		currentClip = &spriteClips[attackingFrame];
-		attackingFrame = (attackingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
+		currentClip = &attackClips[attackingFrame];
+		attackingFrame = (attackingTimer.getTicks() / frameRate) % ATTACKING_FRAMES;
 		if(attackingFrame > 0) firstAttack = true;
 		if(attackingFrame % ANIMATION_FRAMES == 0 && firstAttack == true) {
 			firstAttack = false;
@@ -465,6 +527,8 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		}
 	}
 	else if(mVelY < 0) {
+		walkingTimer.stop();
+		firstWalk = false;
 		if(mVelY < 0 && mVelY >= -100) currentClip = &jumpClips[5];
 		else if(mVelY < -100 && mVelY >= -200) currentClip = &jumpClips[4];
 		else if(mVelY < -200 && mVelY >= -300) currentClip = &jumpClips[3];
@@ -474,6 +538,8 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		else currentClip = &jumpClips[1];
 	}
 	else if(mVelY > 60) {
+		walkingTimer.stop();
+		firstWalk = false;
 		if(tileTap == true) {
 			currentClip = &fallClips[5];
 			tileTap = false;
@@ -496,7 +562,10 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		fallingTimer.stop();
 		// Really complicated implementation...
 
-		if(getVelocityX() > 0) {
+		if(getVelocityX() > 0 || getVelocityX() < 0) {
+			if(getVelocityX() > 0) flip = SDL_FLIP_NONE;
+			else if(getVelocityX() < 0) flip = SDL_FLIP_HORIZONTAL;
+
 			if(!walkingTimer.isStarted()) walkingTimer.start();
 			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
 				walkingTimer.start();
@@ -506,23 +575,8 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 			if(firstWalk == true) {
 				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
 			}
-			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
-			if(walkingFrame > 0) firstWalk = true;
-			flip = SDL_FLIP_NONE;
-		}
-		else if(getVelocityX() < 0) {
-			if(!walkingTimer.isStarted()) walkingTimer.start();
-			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
-				walkingTimer.start();
-				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
-			}
-			currentClip = &spriteClips[walkingFrame];
-			if(firstWalk == true) {
-				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
-			}
-			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
-			if(walkingFrame > 0) firstWalk = true;
-			flip = SDL_FLIP_HORIZONTAL;
+			else if(firstWalk == false) walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
+			if((walkingTimer.getTicks() / frameRate) == ANIMATION_FRAMES) firstWalk = true;
 		}
 		else {
 			walkingFrame = 0;

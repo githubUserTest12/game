@@ -16,10 +16,11 @@ class Character {
 		static const int ANIMATION_FRAMES = 16;
 		static const int JUMPING_FRAMES = 6;
 		static const int FALLING_FRAMES = 6;
-		static const int ATTACKING_FRAMES = 0;
-		static const int SPRITESHEET_WIDTH = 762;
+		static const int ATTACKING_FRAMES = 12;
+		static const int SPRITESHEET_WIDTH = 858;
 		//static const int SPRITESHEET_HEIGHT = 40;
 
+		// Clip containers.
 		LTexture characterTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 		SDL_Rect jumpClips[JUMPING_FRAMES];
@@ -32,10 +33,12 @@ class Character {
 
 		bool headJump;
 		bool isAttacking;
+
 		bool tileTap = false;
 		bool oscillate = false;
-		SDL_Rect *currentClip = NULL;
 
+		// Animation.
+		SDL_Rect *currentClip = NULL;
 		int frameRate;
 
 		int attackingFrame;
