@@ -408,8 +408,6 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
-	else if(mPosY + CHARACTER_HEIGHT > LEVEL_HEIGHT) {
-	}
 	if(tileTouched > -1 && mVelY < 0) {
 		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
@@ -451,7 +449,7 @@ void Character::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Character::render(SDL_Rect &camera, bool toggleParticles, float scale) {
+void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, float heightScale) {
 	//Show the character
 	if(isAttacking) {
 		if(!attackingTimer.isStarted()) attackingTimer.start();
@@ -537,9 +535,9 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale) {
 	//currentClip = &spriteClips[0];
 	// XXX BTON - CHANGE SOMETHING HERE.
 
-	if(scale != 1.0) {
+	if(scale != 1.0 || heightScale) {
 		dstrect.w = (int) (currentClip->w * scale);
-		dstrect.h = (int) (currentClip->h * scale);
+		dstrect.h = (int) (currentClip->h * heightScale);
 	}
 	else {
 		dstrect.w = currentClip->w;

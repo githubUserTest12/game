@@ -31,7 +31,8 @@ LTexture gTextVelocity;
 LTexture gMouseCoordinates;
 
 float gScale;
-float gCharacterScale;
+float gCharacterWidthScale;
+float gCharacterHeightScale;
 int gCharacterFrameRate;
 
 LTexture gButtonSpriteSheetTexture;
@@ -152,7 +153,9 @@ bool init() {
 		config >> tmp;
 		config >> gCharacterFrameRate;
 		config >> tmp;
-		config >> gCharacterScale;
+		config >> gCharacterWidthScale;
+		config >> tmp;
+		config >> gCharacterHeightScale;
 		config.close();
 	}
 
@@ -539,7 +542,7 @@ restart:
 			SDL_Event e;
 
 			//The character that will be moving around on the screen
-			Character character((int) (37 * gCharacterScale), (int) (57 * gCharacterScale));
+			Character character((int) (37 * gCharacterWidthScale), (int) (58 * gCharacterHeightScale));
 			character.frameRate = gCharacterFrameRate;
 
 			//vector implementation
@@ -855,7 +858,7 @@ restart:
 				frame = (ticks / 100) % 4;
 
 				log("rendering character...");
-				character.render(camera, toggleParticles, gCharacterScale);
+				character.render(camera, toggleParticles, gCharacterWidthScale, gCharacterHeightScale);
 
 				log("rendering npc...");
 				

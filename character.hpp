@@ -24,6 +24,7 @@ class Character {
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
 		SDL_Rect jumpClips[JUMPING_FRAMES];
 		SDL_Rect fallClips[FALLING_FRAMES];
+		SDL_Rect attackClips[ATTACKING_FRAMES];
 
 		//Maximum axis velocity of the character
 		const int CHARACTER_VELY = 15 * 60; // * SCREEN_FPS; // 15;
@@ -64,7 +65,7 @@ class Character {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the character on the screen
-		void render(SDL_Rect &camera, bool toggleParticles, float scale);
+		void render(SDL_Rect &camera, bool toggleParticles, float scale = 1.0, float heightScale = 1.0);
 		SDL_Rect dstrect = { 0, 0, CHARACTER_WIDTH, CHARACTER_HEIGHT };
 
 		bool isJumping;
