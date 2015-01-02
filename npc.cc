@@ -135,7 +135,7 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 
 
 	// Gravity.
-	if(NPC_HEIGHT == (int) (105 * 1.72)) {
+	if(NPC_HEIGHT == (int) (105 * gScale)) {
 		switch(rand() % 3) {
 			case 0:
 				mVelY += 3600 * timeStep;

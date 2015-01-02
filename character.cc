@@ -1,7 +1,7 @@
 #include "character.hpp"
 #include <iostream>
 
-Character::Character() {
+Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_HEIGHT(height){
 	//Initialize the collision box
 	mPosX = CHARACTER_WIDTH + TILE_WIDTH;
 	mPosY = 0;
@@ -26,8 +26,150 @@ Character::Character() {
 		printf("Failed to load character texture!\n");
 	}
 	else {
-		int x = 0; 
-		int y = 0;
+
+		// Walking.
+		spriteClips[0].x = 0;
+		spriteClips[0].y = 1;
+		spriteClips[0].w = 36;
+		spriteClips[0].h = 48;
+
+		spriteClips[1].x = 39;
+		spriteClips[1].y = 1;
+		spriteClips[1].w = 38;
+		spriteClips[1].h = 48;
+
+		spriteClips[2].x = 79;
+		spriteClips[2].y = 1;
+		spriteClips[2].w = 46;
+		spriteClips[2].h = 48;
+
+		spriteClips[3].x = 129;
+		spriteClips[3].y = 1;
+		spriteClips[3].w = 44;
+		spriteClips[3].h = 48;
+
+		spriteClips[4].x = 175;
+		spriteClips[4].y = 1;
+		spriteClips[4].w = 40;
+		spriteClips[4].h = 48;
+
+		spriteClips[5].x = 223;
+		spriteClips[5].y = 1;
+		spriteClips[5].w = 45;
+		spriteClips[5].h = 48;
+
+		spriteClips[6].x = 269;
+		spriteClips[6].y = 1;
+		spriteClips[6].w = 49;
+		spriteClips[6].h = 48;
+
+		spriteClips[7].x = 321;
+		spriteClips[7].y = 1;
+		spriteClips[7].w = 45;
+		spriteClips[7].h = 48;
+
+		spriteClips[8].x = 368;
+		spriteClips[8].y = 1;
+		spriteClips[8].w = 50;
+		spriteClips[8].h = 48;
+
+		spriteClips[9].x = 422;
+		spriteClips[9].y = 1;
+		spriteClips[9].w = 46;
+		spriteClips[9].h = 48;
+
+		spriteClips[10].x = 470;
+		spriteClips[10].y = 1;
+		spriteClips[10].w = 43;
+		spriteClips[10].h = 48;
+
+		spriteClips[11].x = 516;
+		spriteClips[11].y = 1;
+		spriteClips[11].w = 42;
+		spriteClips[11].h = 48;
+
+		spriteClips[12].x = 561;
+		spriteClips[12].y = 1;
+		spriteClips[12].w = 45;
+		spriteClips[12].h = 48;
+
+		spriteClips[13].x = 607;
+		spriteClips[13].y = 1;
+		spriteClips[13].w = 50;
+		spriteClips[13].h = 48;
+
+		spriteClips[14].x = 661;
+		spriteClips[14].y = 1;
+		spriteClips[14].w = 48;
+		spriteClips[14].h = 48;
+
+		spriteClips[15].x = 711;
+		spriteClips[15].y = 1;
+		spriteClips[15].w = 50;
+		spriteClips[15].h = 48;
+
+		// Jumping.
+		jumpClips[0].x = 1;
+		jumpClips[0].y = 70;
+		jumpClips[0].w = 39;
+		jumpClips[0].h = 48;
+		
+		jumpClips[1].x = 46;
+		jumpClips[1].y = 66;
+		jumpClips[1].w = 44;
+		jumpClips[1].h = 56;
+		
+		jumpClips[2].x = 97;
+		jumpClips[2].y = 66;
+		jumpClips[2].w = 43;
+		jumpClips[2].h = 56;
+		
+		jumpClips[3].x = 150;
+		jumpClips[3].y = 65;
+		jumpClips[3].w = 43;
+		jumpClips[3].h = 57;
+		
+		jumpClips[4].x = 200;
+		jumpClips[4].y = 65;
+		jumpClips[4].w = 43;
+		jumpClips[4].h = 56;
+		
+		jumpClips[5].x = 250;
+		jumpClips[5].y = 65;
+		jumpClips[5].w = 39;
+		jumpClips[5].h = 52;
+
+		fallClips[0].x = 250;
+		fallClips[0].y = 65;
+		fallClips[0].w = 39;
+		fallClips[0].h = 52;
+
+		fallClips[1].x = 295;
+		fallClips[1].y = 65;
+		fallClips[1].w = 40;
+		fallClips[1].h = 55;
+
+		fallClips[2].x = 340;
+		fallClips[2].y = 65;
+		fallClips[2].w = 36;
+		fallClips[2].h = 64;
+
+		fallClips[3].x = 385;
+		fallClips[3].y = 56;
+		fallClips[3].w = 35;
+		fallClips[3].h = 77;
+
+		fallClips[4].x = 430;
+		fallClips[4].y = 53;
+		fallClips[4].w = 35;
+		fallClips[4].h = 79;
+
+		fallClips[5].x = 475;
+		fallClips[5].y = 71;
+		fallClips[5].w = 40;
+		fallClips[5].h = 59;
+
+		/*
 		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
 			spriteClips[i].x = x;
 			spriteClips[i].y = y;
@@ -40,6 +182,7 @@ Character::Character() {
 				y += CHARACTER_HEIGHT;
 			}
 		}
+		*/
 		/*
 		if(ATTACKING_FRAMES > 0) {
 			x = 0;
@@ -258,6 +401,7 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	mBox.y = mPosY;
 	mWeapon.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
+	tileTap = touchesTap(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
 		mVelY = 0;
 		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
@@ -274,7 +418,9 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 			mPosY = npcVector[npcTouched]->getPosY() - CHARACTER_HEIGHT;
 		}
 		// Hack for now, don't want to decrease frame rate cap.
-		if(mVelY > 60) headJump = true;
+		if(mVelY > 60) {
+			headJump = true;
+		}
 		isJumping = false;
 		npcVector[npcTouched]->wasJumped = true;
 	}
@@ -304,7 +450,7 @@ void Character::setCamera(SDL_Rect &camera) {
 	}
 }
 
-void Character::render(SDL_Rect &camera, bool toggleParticles) {
+void Character::render(SDL_Rect &camera, bool toggleParticles, float scale) {
 	//Show the character
 	if(isAttacking) {
 		if(!attackingTimer.isStarted()) attackingTimer.start();
@@ -317,6 +463,28 @@ void Character::render(SDL_Rect &camera, bool toggleParticles) {
 			attackingFrame = 0;
 			isAttacking = false;
 			currentClip = &spriteClips[0];
+		}
+	}
+	else if(mVelY < 0) {
+		if(mVelY < 0 && mVelY >= -100) currentClip = &jumpClips[5];
+		else if(mVelY < -100 && mVelY >= -200) currentClip = &jumpClips[4];
+		else if(mVelY < -200 && mVelY >= -300) currentClip = &jumpClips[3];
+		else if(mVelY < -300 && mVelY >= -600) currentClip = &jumpClips[2];
+		else if(mVelY < -600 && mVelY >= -800) currentClip = &jumpClips[1];
+		else if(mVelY < -800 && mVelY >= -900) currentClip = &jumpClips[0];
+		else currentClip = &jumpClips[1];
+	}
+	else if(mVelY > 60) {
+		if(tileTap == true) {
+			currentClip = &fallClips[5];
+			tileTap = false;
+		}
+		else if(mVelY > 60 && mVelY <= 100) currentClip = &fallClips[0];
+		else if(mVelY > 100 && mVelY <= 200) currentClip = &fallClips[1];
+		else if(mVelY > 200 && mVelY <= 400) currentClip = &fallClips[2];
+		else if(mVelY > 400 && mVelY <= 600) currentClip = &fallClips[3];
+		else if(mVelY > 600) {
+			currentClip = &fallClips[4];
 		}
 	}
 	else {
@@ -361,8 +529,24 @@ void Character::render(SDL_Rect &camera, bool toggleParticles) {
 	//currentClip = &spriteClips[0];
 	// XXX BTON - CHANGE SOMETHING HERE.
 
-	dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
+	if(scale != 1.0) {
+		dstrect.w = (int) (currentClip->w * scale);
+		dstrect.h = (int) (currentClip->h * scale);
+	}
+	else {
+		dstrect.w = currentClip->w;
+		dstrect.h = currentClip->h;
+	}
+	if(flip == SDL_FLIP_NONE) {
+		dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
+	}
+	else {
+		dstrect.x = (int)(mPosX) - camera.x;
+	}
 	dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
+
+	//dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
+	//dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
 	if(flip == SDL_FLIP_NONE) {
 		// To adjust for clipping size.
 		characterTexture.render((int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);

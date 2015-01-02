@@ -30,6 +30,10 @@ LTexture gFpsTextTexture;
 LTexture gTextVelocity;
 LTexture gMouseCoordinates;
 
+float gScale;
+float gCharacterScale;
+int gCharacterFrameRate;
+
 LTexture gButtonSpriteSheetTexture;
 LButton gButtons[TOTAL_BUTTONS];
 SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
@@ -77,6 +81,7 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
+bool touchesTap(SDL_Rect box, Tile *tiles[]);
 
 int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcVector);
 
@@ -132,6 +137,23 @@ bool init() {
 				}
 			}
 		}
+	}
+
+	// load configuration file.
+	std::ifstream config("config.txt");
+	if(config == NULL) {
+		printf("unable to load config file.");
+		success = false;
+	}
+	else {
+		std::string tmp;
+		config >> tmp;
+		config >> gScale;
+		config >> tmp;
+		config >> gCharacterFrameRate;
+		config >> tmp;
+		config >> gCharacterScale;
+		config.close();
 	}
 
 	return success;
@@ -319,6 +341,46 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
 	return true;
 }
 
+bool checkUpperCollision(SDL_Rect a, SDL_Rect b) {
+	//The sides of the rectangles
+	int leftA, leftB;
+	int rightA, rightB;
+	int topA, topB;
+	int bottomA, bottomB;
+
+	//Calculate the sides of rect A
+	leftA = a.x;
+	rightA = a.x + a.w;
+	topA = a.y;
+	bottomA = a.y + a.h;
+
+	//Calculate the sides of rect B
+	leftB = b.x;
+	rightB = b.x + b.w;
+	topB = b.y - 50;
+	bottomB = b.y + b.h;
+
+	//If any of the sides from A are outside of B
+	if(bottomA <= topB) {
+		return false;
+	}
+
+	if(topA >= bottomB) {
+		return false;
+	}
+
+	if(rightA <= leftB) {
+		return false;
+	}
+
+	if(leftA >= rightB) {
+		return false;
+	}
+
+	//If none of the sides from A are outside B
+	return true;
+}
+
 bool setTiles(Tile *tiles[], std::string mapName) {
 	//Success flag
 	bool tilesLoaded = true;
@@ -402,6 +464,22 @@ bool setTiles(Tile *tiles[], std::string mapName) {
 	return tilesLoaded;
 }
 
+bool touchesTap(SDL_Rect box, Tile *tiles[]) {
+	//Go through the tiles
+	for(int i = 0; i < TOTAL_TILES; ++i) {
+		//If the tile is a wall type tile
+		if(tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 20) {
+			//If the collision box touches the wall tile
+			if(checkUpperCollision(box, tiles[i]->getBox())) {
+				return true;
+			}
+		}
+	}
+
+	//If no wall tiles were touched
+	return false;
+}
+
 int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	//Go through the tiles
 	for(int i = 0; i < TOTAL_TILES; ++i) {
@@ -461,96 +539,16 @@ restart:
 			SDL_Event e;
 
 			//The character that will be moving around on the screen
-			Character character;
-
-			character.spriteClips[0].x = 0;
-			character.spriteClips[0].y = 1;
-			character.spriteClips[0].w = 36;
-			character.spriteClips[0].h = 48;
-
-			character.spriteClips[1].x = 39;
-			character.spriteClips[1].y = 1;
-			character.spriteClips[1].w = 38;
-			character.spriteClips[1].h = 48;
-
-			character.spriteClips[2].x = 79;
-			character.spriteClips[2].y = 1;
-			character.spriteClips[2].w = 46;
-			character.spriteClips[2].h = 48;
-
-			character.spriteClips[3].x = 129;
-			character.spriteClips[3].y = 1;
-			character.spriteClips[3].w = 44;
-			character.spriteClips[3].h = 48;
-
-			character.spriteClips[4].x = 175;
-			character.spriteClips[4].y = 1;
-			character.spriteClips[4].w = 40;
-			character.spriteClips[4].h = 48;
-
-			character.spriteClips[5].x = 223;
-			character.spriteClips[5].y = 1;
-			character.spriteClips[5].w = 45;
-			character.spriteClips[5].h = 48;
-
-			character.spriteClips[6].x = 269;
-			character.spriteClips[6].y = 1;
-			character.spriteClips[6].w = 49;
-			character.spriteClips[6].h = 48;
-
-			character.spriteClips[7].x = 321;
-			character.spriteClips[7].y = 1;
-			character.spriteClips[7].w = 45;
-			character.spriteClips[7].h = 48;
-
-			character.spriteClips[8].x = 368;
-			character.spriteClips[8].y = 1;
-			character.spriteClips[8].w = 50;
-			character.spriteClips[8].h = 48;
-
-			character.spriteClips[9].x = 422;
-			character.spriteClips[9].y = 1;
-			character.spriteClips[9].w = 46;
-			character.spriteClips[9].h = 48;
-
-			character.spriteClips[10].x = 470;
-			character.spriteClips[10].y = 1;
-			character.spriteClips[10].w = 43;
-			character.spriteClips[10].h = 48;
-
-			character.spriteClips[11].x = 516;
-			character.spriteClips[11].y = 1;
-			character.spriteClips[11].w = 42;
-			character.spriteClips[11].h = 48;
-
-			character.spriteClips[12].x = 561;
-			character.spriteClips[12].y = 1;
-			character.spriteClips[12].w = 45;
-			character.spriteClips[12].h = 48;
-
-			character.spriteClips[13].x = 607;
-			character.spriteClips[13].y = 1;
-			character.spriteClips[13].w = 50;
-			character.spriteClips[13].h = 48;
-
-			character.spriteClips[14].x = 661;
-			character.spriteClips[14].y = 1;
-			character.spriteClips[14].w = 48;
-			character.spriteClips[14].h = 48;
-
-			character.spriteClips[15].x = 711;
-			character.spriteClips[15].y = 1;
-			character.spriteClips[15].w = 50;
-			character.spriteClips[15].h = 48;
-			float scale = 1.72;
+			Character character((int) (37 * gCharacterScale), (int) (57 * gCharacterScale));
+			character.frameRate = gCharacterFrameRate;
 
 			//vector implementation
 			std::vector<Npc *> npcVector;
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character2.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character3.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * scale)) + TILE_WIDTH, 0, (int) (38 * scale), (int) (55 * scale), 4, "character1.png"));
-			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (76 * scale)) + TILE_WIDTH, 0, (int) (76 * scale), (int) (105 * scale), 4, "character4.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * gScale)) + TILE_WIDTH, 0, (int) (38 * gScale), (int) (55 * gScale), 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * gScale)) + TILE_WIDTH, 0, (int) (38 * gScale), (int) (55 * gScale), 4, "character2.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * gScale)) + TILE_WIDTH, 0, (int) (38 * gScale), (int) (55 * gScale), 4, "character3.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (38 * gScale)) + TILE_WIDTH, 0, (int) (38 * gScale), (int) (55 * gScale), 4, "character1.png"));
+			npcVector.push_back(new Npc(rand() % (LEVEL_WIDTH - (int) (76 * gScale)) + TILE_WIDTH, 0, (int) (76 * gScale), (int) (105 * gScale), 4, "character4.png"));
 
 			npcVector[4]->spriteClips[0].x = 0;
 			npcVector[4]->spriteClips[0].y = 0;
@@ -676,7 +674,7 @@ restart:
 						int random = rand() % 4 + 1;
 						os << "character" << random << ".png";
 						if(random == 4) {
-							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int)(76 * scale), (int)(105 * scale), 4, os.str()));
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int)(76 * gScale), (int)(105 * gScale), 4, os.str()));
 
 							npcVector[npcVector.size() - 1]->spriteClips[0].x = 0;
 							npcVector[npcVector.size() - 1]->spriteClips[0].y = 0;
@@ -699,7 +697,7 @@ restart:
 							npcVector[npcVector.size() - 1]->spriteClips[3].h = 105;
 						}
 						else {
-							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int) (scale * 38), (int) (scale * 55), 4, os.str()));
+							npcVector.push_back(new Npc(camera.x + xMouse, camera.y + yMouse, (int) (gScale * 38), (int) (gScale * 55), 4, os.str()));
 						}
 					}
 
@@ -857,19 +855,19 @@ restart:
 				frame = (ticks / 100) % 4;
 
 				log("rendering character...");
-				character.render(camera, toggleParticles);
+				character.render(camera, toggleParticles, gCharacterScale);
 
 				log("rendering npc...");
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
-					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == (int)(105 * scale)) {
+					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == (int)(105 * gScale)) {
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[frame];
 					}
 					else { 
 						npcVector[i]->currentClip = &npcVector[i]->spriteClips[1]; 
 					}
-					if(npcVector[i]->NPC_HEIGHT == (int)(105 * scale)) npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, scale);
-					else npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, scale);
+					if(npcVector[i]->NPC_HEIGHT == (int)(105 * gScale)) npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, gScale);
+					else npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, gScale);
 				}
 				
 				// Next frame.

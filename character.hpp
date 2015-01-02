@@ -11,16 +11,19 @@ class Character {
 	public:
 		//The dimensions of the character
 
-		static const int CHARACTER_WIDTH = 65;
-		static const int CHARACTER_HEIGHT = 80;
+		const int CHARACTER_WIDTH;// = 65;
+		const int CHARACTER_HEIGHT;// = 80;
 		static const int ANIMATION_FRAMES = 16;
+		static const int JUMPING_FRAMES = 6;
+		static const int FALLING_FRAMES = 6;
 		static const int ATTACKING_FRAMES = 0;
-		static const int TOTAL_FRAMES = ANIMATION_FRAMES + ATTACKING_FRAMES;
 		static const int SPRITESHEET_WIDTH = 762;
 		//static const int SPRITESHEET_HEIGHT = 40;
 
 		LTexture characterTexture;
 		SDL_Rect spriteClips[ANIMATION_FRAMES];
+		SDL_Rect jumpClips[JUMPING_FRAMES];
+		SDL_Rect fallClips[FALLING_FRAMES];
 
 		//Maximum axis velocity of the character
 		const int CHARACTER_VELY = 15 * 60; // * SCREEN_FPS; // 15;
@@ -28,18 +31,23 @@ class Character {
 
 		bool headJump;
 		bool isAttacking;
+		bool tileTap = false;
 		bool oscillate = false;
 		SDL_Rect *currentClip = NULL;
+
+		int frameRate;
+
 		int attackingFrame;
 		int walkingFrame;
-		int frameRate;
+
 		LTimer attackingTimer;
 		LTimer walkingTimer;
+
 		bool firstAttack = false;
 		bool firstWalk = false;
 
 		//Initializes the variables allocates particles.
-		Character();
+		Character(int width, int height);
 
 		// Deallocates particles.
 		~Character();
@@ -54,7 +62,7 @@ class Character {
 		void setCamera(SDL_Rect &camera);
 
 		//Shows the character on the screen
-		void render(SDL_Rect &camera, bool toggleParticles);
+		void render(SDL_Rect &camera, bool toggleParticles, float scale);
 		SDL_Rect dstrect = { 0, 0, CHARACTER_WIDTH, CHARACTER_HEIGHT };
 
 		bool isJumping;

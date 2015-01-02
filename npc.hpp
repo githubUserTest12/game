@@ -8,6 +8,7 @@
 #include "timer.hpp"
 
 extern int touchesWall(SDL_Rect box, Tile *tiles[]);
+extern bool touchesTap(SDL_Rect box, Tile *tiles[]);
 
 class Character;
 
