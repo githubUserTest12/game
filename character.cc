@@ -19,6 +19,7 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 	flip = SDL_FLIP_NONE;
 	attackingFrame = 0;
 	walkingFrame = 0;
+	fallingFrame = 3;
 	frameRate = 40;
 
 	//Load character texture
@@ -484,38 +485,45 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale) {
 		else if(mVelY > 200 && mVelY <= 400) currentClip = &fallClips[2];
 		else if(mVelY > 400 && mVelY <= 600) currentClip = &fallClips[3];
 		else if(mVelY > 600) {
-			currentClip = &fallClips[4];
+			if(!fallingTimer.isStarted()) fallingTimer.start();
+			fallingFrame = ((fallingTimer.getTicks() / frameRate) + 3) % 5;
+			if(((fallingTimer.getTicks() / frameRate) + 3) % 5 == 0) {
+				fallingTimer.start();
+				fallingFrame = ((fallingTimer.getTicks() / frameRate) + 3) % 5;
+			}
+			currentClip = &fallClips[fallingFrame];
 		}
 	}
 	else {
+		fallingTimer.stop();
 		// Really complicated implementation...
 
 		if(getVelocityX() > 0) {
 			if(!walkingTimer.isStarted()) walkingTimer.start();
+			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
+				walkingTimer.start();
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
 			currentClip = &spriteClips[walkingFrame];
 			if(firstWalk == true) {
 				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
 			}
 			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
 			if(walkingFrame > 0) firstWalk = true;
-			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
-				walkingTimer.start();
-				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
-			}
 			flip = SDL_FLIP_NONE;
 		}
 		else if(getVelocityX() < 0) {
 			if(!walkingTimer.isStarted()) walkingTimer.start();
+			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
+				walkingTimer.start();
+				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
+			}
 			currentClip = &spriteClips[walkingFrame];
 			if(firstWalk == true) {
 				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
 			}
 			else walkingFrame = (walkingTimer.getTicks() / frameRate) % ANIMATION_FRAMES;
 			if(walkingFrame > 0) firstWalk = true;
-			if(walkingFrame % ANIMATION_FRAMES == 0 && firstWalk == true) {
-				walkingTimer.start();
-				walkingFrame = ((walkingTimer.getTicks() / frameRate) + 2) % ANIMATION_FRAMES;
-			}
 			flip = SDL_FLIP_HORIZONTAL;
 		}
 		else {

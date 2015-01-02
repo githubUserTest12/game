@@ -39,8 +39,10 @@ class Character {
 
 		int attackingFrame;
 		int walkingFrame;
+		int fallingFrame;
 
 		LTimer attackingTimer;
+		LTimer fallingTimer;
 		LTimer walkingTimer;
 
 		bool firstAttack = false;
