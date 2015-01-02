@@ -4,6 +4,7 @@
 void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip, float scale) {
 	//Show the dot
 	if(checkCollision(camera, mBox)) {
+		/*
 		if(scale != 1.0) {
 			dstrect.w = (int) (clip->w * scale);
 			dstrect.h = (int) (clip->h * scale);
@@ -19,6 +20,13 @@ void Npc::render(SDL_Rect &camera, bool toggleParticles, SDL_Rect *clip, float s
 			dstrect.x = (int)(mPosX) - camera.x;
 		}
 		dstrect.y = (int)(mPosY) - camera.y - dstrect.h + NPC_HEIGHT;
+		*/
+		// XXX FIXED.
+		dstrect.w = (int) (currentClip->w * scale);
+		dstrect.h = (int) (currentClip->h * scale);
+		if(flip == SDL_FLIP_HORIZONTAL) dstrect.x = (int)(mBox.x - camera.x - dstrect.w + NPC_WIDTH);
+		else dstrect.x = (int) (mBox.x - camera.x);
+		dstrect.y = (int) (mBox.y - camera.y);
 
 		if(flip == SDL_FLIP_HORIZONTAL) {
 			// To adjust for clipping size.

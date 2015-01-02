@@ -556,7 +556,6 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 	dstrect.h = (int) (currentClip->h * heightScale);
 	if(flip == SDL_FLIP_NONE) dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
 	else dstrect.x = (int) (mBox.x - camera.x);
-	//if(mVelY >= 600 && tileTap == false) dstrect.y = (int) (mBox.y - camera.y - dstrect.h + CHARACTER_HEIGHT + 60);
 	dstrect.y = (int) (mBox.y - camera.y);
 
 	//dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
