@@ -161,7 +161,7 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 		fallClips[3].h = 77;
 
 		fallClips[4].x = 430;
-		fallClips[4].y = 53;
+		fallClips[4].y = 56;
 		fallClips[4].w = 35;
 		fallClips[4].h = 79;
 
@@ -535,7 +535,8 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 	//currentClip = &spriteClips[0];
 	// XXX BTON - CHANGE SOMETHING HERE.
 
-	if(scale != 1.0 || heightScale) {
+	/*
+	if(scale != 1.0 || heightScale != 1.0) {
 		dstrect.w = (int) (currentClip->w * scale);
 		dstrect.h = (int) (currentClip->h * heightScale);
 	}
@@ -550,12 +551,19 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		dstrect.x = (int)(mPosX) - camera.x;
 	}
 	dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
+	*/
+	dstrect.w = (int) (currentClip->w * scale);
+	dstrect.h = (int) (currentClip->h * heightScale);
+	if(flip == SDL_FLIP_NONE) dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
+	else dstrect.x = (int) (mBox.x - camera.x);
+	//if(mVelY >= 600 && tileTap == false) dstrect.y = (int) (mBox.y - camera.y - dstrect.h + CHARACTER_HEIGHT + 60);
+	dstrect.y = (int) (mBox.y - camera.y);
 
 	//dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
 	//dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
 	if(flip == SDL_FLIP_NONE) {
 		// To adjust for clipping size.
-		characterTexture.render((int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);
+		characterTexture.render(0 /*(int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH*/, 0 /*(int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT*/, currentClip, dstrect, 0, NULL, flip);
 	}
 	else {
 		characterTexture.render((int)(mPosX) - camera.x, (int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT, currentClip, dstrect, 0, NULL, flip);

@@ -542,7 +542,7 @@ restart:
 			SDL_Event e;
 
 			//The character that will be moving around on the screen
-			Character character((int) (37 * gCharacterWidthScale), (int) (58 * gCharacterHeightScale));
+			Character character((int) (37 * gCharacterWidthScale), (int) (48 * gCharacterHeightScale));
 			character.frameRate = gCharacterFrameRate;
 
 			//vector implementation
