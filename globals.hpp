@@ -26,10 +26,10 @@ const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 const int TILE_WIDTH = 80;
 const int TILE_HEIGHT = 80;
 const int TOTAL_TILES = (192 * 2) * 2;
-const int TOTAL_TILE_SPRITES = 48;
+const int TOTAL_TILE_SPRITES = 96;
 
 //The different tile sprites
-const int TILESHEET_WIDTH = 320;
+const int TILESHEET_WIDTH = 640;
 const int TILESHEET_HEIGHT = 960;
 
 const int TOTAL_PARTICLES = 15;

@@ -11,6 +11,10 @@ Tile::Tile(int x, int y, int tileType) {
 	mBox.h = TILE_HEIGHT;
 
 	//Get the tile type
+	if(tileType % 4 != 0 && tileType > 20 && tileType <= 27 && tileType != 23) {
+		mCollisionBox = mBox;
+		mCollisionBox.h = (TILE_HEIGHT / 2);
+	}
 	mType = tileType;
 }
 
@@ -28,4 +32,8 @@ int Tile::getType() {
 
 SDL_Rect Tile::getBox() {
 	return mBox;
+}
+
+SDL_Rect Tile::getCollisionBox() {
+	return mCollisionBox;
 }

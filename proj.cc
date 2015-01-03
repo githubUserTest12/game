@@ -444,7 +444,22 @@ bool setTiles(Tile *tiles[], std::string mapName) {
 		//Clip the sprite sheet
 		if(tilesLoaded) {
 			x = 0; y =0;
-			for(int i = 0; i < TOTAL_TILE_SPRITES; ++i) {
+			for(int i = 0; i < TOTAL_TILE_SPRITES / 2; ++i) {
+				gTileClips[i].x = x;
+				gTileClips[i].y = y;
+				gTileClips[i].w = TILE_WIDTH;
+				gTileClips[i].h = TILE_HEIGHT;
+
+				x += TILE_WIDTH;
+				if(x >=  TILESHEET_WIDTH / 2) {
+					x = 0;
+					y += TILE_HEIGHT;
+				}
+			}
+
+			x = TILESHEET_WIDTH / 2;
+			y = 0;
+			for(int i = TOTAL_TILE_SPRITES / 2; i < TOTAL_TILE_SPRITES; ++i) {
 				gTileClips[i].x = x;
 				gTileClips[i].y = y;
 				gTileClips[i].w = TILE_WIDTH;
@@ -452,7 +467,7 @@ bool setTiles(Tile *tiles[], std::string mapName) {
 
 				x += TILE_WIDTH;
 				if(x >=  TILESHEET_WIDTH) {
-					x = 0;
+					x = TILESHEET_WIDTH / 2;
 					y += TILE_HEIGHT;
 				}
 			}
@@ -487,10 +502,19 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 	//Go through the tiles
 	for(int i = 0; i < TOTAL_TILES; ++i) {
 		//If the tile is a wall type tile
-		if(tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 20) {
+		if((tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 20) || 
+			 (tiles[i]->getType() % 4 != 0 && tiles[i]->getType() >= 49 && tiles[i]->getType() < 68) ||
+			 (tiles[i]->getType() % 4 != 0 && tiles[i]->getType() > 20 && tiles[i]->getType() <= 27 && tiles[i]->getType() != 23)) {
 			//If the collision box touches the wall tile
-			if(checkCollision(box, tiles[i]->getBox())) {
-				return i;
+			if(tiles[i]->getType() > 20 && tiles[i]->getType() <= 27) {
+				if(checkCollision(box, tiles[i]->getCollisionBox())) {
+					return i;
+				}
+			}
+			else {
+				if(checkCollision(box, tiles[i]->getBox())) {
+					return i;
+				}
 			}
 		}
 	}

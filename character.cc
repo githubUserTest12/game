@@ -395,10 +395,12 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	mWeapon.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		mPosX = tiles[tileTouched]->getBox().x - CHARACTER_WIDTH;
+		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x - CHARACTER_WIDTH;
+		else mPosX = tiles[tileTouched]->getBox().x - CHARACTER_WIDTH;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
-		mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
+		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x + TILE_WIDTH;
+		else mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 
 	if(isAttacking && flip == SDL_FLIP_NONE) mWeapon.x = mPosX + 50;
@@ -465,11 +467,13 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	tileTap = touchesTap(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
 		mVelY = 0;
-		mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
+		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y - CHARACTER_HEIGHT;
+		else mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {
-		mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
+		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y + tiles[tileTouched]->getCollisionBox().h;
+		else mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
 	npcTouched = touchesNpc(mBox, npcVector);
 	if(npcTouched > -1 && mVelY > 0) {
