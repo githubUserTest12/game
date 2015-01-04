@@ -394,12 +394,34 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	mBox.x = mPosX;
 	mWeapon.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
-	if(tileTouched > -1 && mVelX > 0) {
-		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x - CHARACTER_WIDTH;
+	/*
+	if(tileTouched > -1 && tiles[tileTouched]->diagonalTile && mPosX > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].x) {
+		mPosX = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].x + tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].w;
+	}
+	*/
+	if(tileTouched > -1 && tiles[tileTouched]->diagonalTile && mPosY > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y) {
+		mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y + tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].h;
+		mPosX = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].x - tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].w;
+	}
+	else if(tileTouched > -1 && mPosX < tiles[tileTouched]->getBox().x) {
+		if(tiles[tileTouched]->topHalf) mPosX = tiles[tileTouched]->getCollisionBox().x - CHARACTER_WIDTH;
+		else if(tiles[tileTouched]->diagonalTile && !(mPosY > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y)) {
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y - CHARACTER_HEIGHT;
+		}
 		else mPosX = tiles[tileTouched]->getBox().x - CHARACTER_WIDTH;
 	}
-	if(tileTouched > -1 && mVelX < 0) {
-		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x + TILE_WIDTH;
+	else if(tileTouched > -1 && mVelX < 0) {
+		if(tiles[tileTouched]->topHalf) mPosX = tiles[tileTouched]->getCollisionBox().x + TILE_WIDTH;
+		else if(tiles[tileTouched]->diagonalTile && mPosY < tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y) {
+			std::cout << tiles[tileTouched]->pixelTouched << std::endl;
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y - tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].h;
+		}
+		else if(tiles[tileTouched]->diagonalTile && mPosY > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y) {
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y + tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].h;
+			mPosX = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].x - tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].w;
+		}
 		else mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 
@@ -465,14 +487,32 @@ void Character::move(Tile *tiles[], std::vector<Npc *> &npcVector, float timeSte
 	mWeapon.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	tileTap = touchesTap(mBox, tiles);
-	if(tileTouched > -1 && mVelY > 0) {
+	if(tileTouched > -1 && tiles[tileTouched]->diagonalTile && mPosY > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y) {
+		// Do nothing, seriously...
+	}
+	else if(tileTouched > -1 && mPosY < tiles[tileTouched]->getBox().y) {
 		mVelY = 0;
-		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y - CHARACTER_HEIGHT;
+		if(tiles[tileTouched]->topHalf) mPosY = tiles[tileTouched]->getCollisionBox().y - CHARACTER_HEIGHT;
+		else if(tiles[tileTouched]->diagonalTile) {
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y - CHARACTER_HEIGHT;
+		}
 		else mPosY = tiles[tileTouched]->getBox().y - CHARACTER_HEIGHT;
 		isJumping = false;
 	}
-	if(tileTouched > -1 && mVelY < 0) {
-		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y + tiles[tileTouched]->getCollisionBox().h;
+	/*
+	if(tileTouched > -1 && tiles[tileTouched]->diagonalTile && mPosY > tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y) {
+		mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y + tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].h;
+	}
+	*/
+	else if((tileTouched > -1 && mPosY > tiles[tileTouched]->getBox().y)) {
+		if(tiles[tileTouched]->topHalf) mPosY = tiles[tileTouched]->getCollisionBox().y + tiles[tileTouched]->getCollisionBox().h;
+		/*
+		else if(tiles[tileTouched]->diagonalTile) {
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y + tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].h;
+		}
+		*/
 		else mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
 	npcTouched = touchesNpc(mBox, npcVector);

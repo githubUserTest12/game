@@ -116,11 +116,15 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 	mBox.x = mPosX;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelX > 0) {
-		if(tiles[tileTouched]->getType() >= 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x - NPC_WIDTH;
+		if(tiles[tileTouched]->topHalf) mPosX = tiles[tileTouched]->getCollisionBox().x - NPC_WIDTH;
+		else if(tiles[tileTouched]->diagonalTile) {
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y - NPC_HEIGHT;
+		}
 		else mPosX = tiles[tileTouched]->getBox().x - NPC_WIDTH;
 	}
 	if(tileTouched > -1 && mVelX < 0) {
-		if(tiles[tileTouched]->getType() == 21 && tiles[tileTouched]->getType() <= 27) mPosX = tiles[tileTouched]->getCollisionBox().x + TILE_WIDTH;
+		if(tiles[tileTouched]->topHalf) mPosX = tiles[tileTouched]->getCollisionBox().x + TILE_WIDTH;
 		else mPosX = tiles[tileTouched]->getBox().x + TILE_WIDTH;
 	}
 	if(checkCollision(mBox, character.getBoxPosition()) && mVelX > 0) {
@@ -179,12 +183,16 @@ void Npc::move(Tile *tiles[], Character &character, float timeStep) {
 	mBox.y = mPosY;
 	tileTouched = touchesWall(mBox, tiles);
 	if(tileTouched > -1 && mVelY > 0) {
-		if(tiles[tileTouched]->getType() == 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y - NPC_HEIGHT;
+		if(tiles[tileTouched]->topHalf) mPosY = tiles[tileTouched]->getCollisionBox().y - NPC_HEIGHT;
+		else if(tiles[tileTouched]->diagonalTile) {
+			//std::cout << "hit!" << std::endl;
+			mPosY = tiles[tileTouched]->getPixelBox()[tiles[tileTouched]->pixelTouched].y - NPC_HEIGHT;
+		}
 		else mPosY = tiles[tileTouched]->getBox().y - NPC_HEIGHT;
 		isJumping = false;
 	}
 	if(tileTouched > -1 && mVelY < 0) {
-		if(tiles[tileTouched]->getType() == 21 && tiles[tileTouched]->getType() <= 27) mPosY = tiles[tileTouched]->getCollisionBox().y + tiles[tileTouched]->getCollisionBox().h;
+		if(tiles[tileTouched]->topHalf) mPosY = tiles[tileTouched]->getCollisionBox().y + tiles[tileTouched]->getCollisionBox().h;
 		else mPosY = tiles[tileTouched]->getBox().y + TILE_HEIGHT;
 	}
 	if(checkCollision(mBox, character.getBoxPosition()) && mVelY > 0) {

@@ -79,6 +79,7 @@ bool setTiles(Tile *tiles[], std::string mapName);
 
 //Box collision detector
 bool checkCollision(SDL_Rect a, SDL_Rect b);
+int checkDiagonalCollision(SDL_Rect a, std::vector<SDL_Rect> &b);
 
 //Checks collision box against set of tiles
 int touchesWall(SDL_Rect box, Tile *tiles[]);
@@ -344,6 +345,53 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
 	return true;
 }
 
+int checkDiagonalCollision(SDL_Rect a, std::vector<SDL_Rect> &b) {
+	//The sides of the rectangles
+	int leftA, leftB;
+	int rightA, rightB;
+	int topA, topB;
+	int bottomA, bottomB;
+
+	//Calculate the sides of rect A
+	leftA = a.x;
+	rightA = a.x + a.w;
+	topA = a.y;
+	bottomA = a.y + a.h;
+
+	//Calculate the sides of rect B
+	for(unsigned bBox = 0; bBox < b.size(); ++bBox) {
+		leftB = b[bBox].x;
+		rightB = b[bBox].x + b[bBox].w;
+		topB = b[bBox].y;
+		bottomB = b[bBox].y + b[bBox].h;
+
+		//If any of the sides from A are outside of B
+		if(((bottomA <= topB) || (topA >= bottomB) || (rightA <= leftB) || (leftA >= rightB)) == false) {
+			return bBox;
+		}
+		/*
+		if(bottomA <= topB) {
+			return false;
+		}
+
+		if(topA >= bottomB) {
+			return false;
+		}
+
+		if(rightA <= leftB) {
+			return false;
+		}
+
+		if(leftA >= rightB) {
+			return false;
+		}
+		*/
+	}
+
+	//If none of the sides from A are outside B
+	return -1;
+}
+
 bool checkUpperCollision(SDL_Rect a, SDL_Rect b) {
 	//The sides of the rectangles
 	int leftA, leftB;
@@ -504,10 +552,18 @@ int touchesWall(SDL_Rect box, Tile *tiles[]) {
 		//If the tile is a wall type tile
 		if((tiles[i]->getType() % 4 != 0 && tiles[i]->getType() < 20) || 
 			 (tiles[i]->getType() % 4 != 0 && tiles[i]->getType() >= 49 && tiles[i]->getType() < 68) ||
-			 (tiles[i]->getType() % 4 != 0 && tiles[i]->getType() > 20 && tiles[i]->getType() <= 27 && tiles[i]->getType() != 23)) {
+			 (tiles[i]->topHalf) ||
+			 (tiles[i]->diagonalTile)) {
 			//If the collision box touches the wall tile
-			if(tiles[i]->getType() > 20 && tiles[i]->getType() <= 27) {
+			if(tiles[i]->topHalf) {
 				if(checkCollision(box, tiles[i]->getCollisionBox())) {
+					return i;
+				}
+			}
+			else if(tiles[i]->diagonalTile) {
+				int diag = checkDiagonalCollision(box, tiles[i]->getPixelBox());
+				if(diag > -1) {
+					tiles[i]->pixelTouched = diag;
 					return i;
 				}
 			}
