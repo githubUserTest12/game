@@ -365,27 +365,10 @@ int checkDiagonalCollision(SDL_Rect a, std::vector<SDL_Rect> &b) {
 		topB = b[bBox].y;
 		bottomB = b[bBox].y + b[bBox].h;
 
-		//If any of the sides from A are outside of B
+		//If any of the sides from A are outside of B, new way to check collision.
 		if(((bottomA <= topB) || (topA >= bottomB) || (rightA <= leftB) || (leftA >= rightB)) == false) {
 			return bBox;
 		}
-		/*
-		if(bottomA <= topB) {
-			return false;
-		}
-
-		if(topA >= bottomB) {
-			return false;
-		}
-
-		if(rightA <= leftB) {
-			return false;
-		}
-
-		if(leftA >= rightB) {
-			return false;
-		}
-		*/
 	}
 
 	//If none of the sides from A are outside B
@@ -411,7 +394,7 @@ bool checkUpperCollision(SDL_Rect a, SDL_Rect b) {
 	topB = b.y - 50;
 	bottomB = b.y + b.h;
 
-	//If any of the sides from A are outside of B
+	//If any of the sides from A are outside of B, old way to check collision.
 	if(bottomA <= topB) {
 		return false;
 	}
@@ -587,7 +570,7 @@ int touchesNpc(SDL_Rect box, std::vector<Npc *> &npcVector) {
 		}
 	}
 
-	//If no wall tiles were touched
+	//If no npc were touched
 	return -1;
 }
 
@@ -686,7 +669,8 @@ restart:
 			int scrollingOffset = 0;
 
 			std::string randomGuy;
-			/*
+
+			/* Viewport implementation if needed.
 			SDL_Rect wholeScreenViewport;
 			wholeScreenViewport.x = 0;
 			wholeScreenViewport.y = 0;
@@ -822,9 +806,10 @@ restart:
 				}
 
 				
+				// Handle pushback attack collision.
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
 					if(npcVector[i]->wasStabbed) {
-						if(npcVector[i]->wasAttackedTimer.getTicks() > 300) {
+						if(npcVector[i]->wasAttackedTimer.getTicks() > 100) {
 							npcVector[i]->setVelocityX(0);
 							npcVector[i]->wasStabbed = false;
 							npcVector[i]->wasAttackedTimer.stop();
@@ -933,14 +918,13 @@ restart:
 				gFpsTextTexture.render((SCREEN_WIDTH - gFpsTextTexture.getWidth()),  60);
 				gMouseCoordinates.render((SCREEN_WIDTH - gMouseCoordinates.getWidth()),  90);
 
-				//Render character
-				//Uint32 sprite = seconds % 4;
-				frame = (ticks / 100) % 4;
-
 				log("rendering character...");
 				character.render(camera, toggleParticles, gCharacterWidthScale, gCharacterHeightScale);
 
 				log("rendering npc...");
+
+				//NPC frame.
+				frame = (ticks / 100) % 4;
 				
 				for(unsigned int i = 0; i < npcVector.size(); ++i) {
 					if(npcVector[i]->isMoving || npcVector[i]->NPC_HEIGHT == (int)(105 * gScale)) {
@@ -953,12 +937,6 @@ restart:
 					else npcVector[i]->render(camera, toggleParticles, npcVector[i]->currentClip, gScale);
 				}
 				
-				// Next frame.
-				// XXX BTON U ?LEFT OFF HERE.
-				//++frame;
-				// Cycle.
-				//if(frame / character.ANIMATION_FRAMES >= character.ANIMATION_FRAMES) frame = 0;
-
         //SDL_RenderSetViewport(gRenderer, &topLeftViewport);
 				// Render buttons.
 				for(int i = 0; i < TOTAL_BUTTONS; ++i) {

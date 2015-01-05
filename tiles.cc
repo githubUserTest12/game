@@ -26,7 +26,6 @@ Tile::Tile(int x, int y, int tileType) {
 		mPixelBox[tmp].y = mBox.y + 40;
 		*/
 		for(int i = 79; i >= 0; --i) {
-			std::cout << tmp << ", x: "  << mBox.x + i << " y: " << mBox.y + (79 - i) << std::endl;
 			mPixelBox[tmp].x = mBox.x + i;
 			mPixelBox[tmp].y = mBox.y + (79 - i);
 			mPixelBox[tmp].w = 1;
