@@ -5,3 +5,5 @@
 *.txt
 .*.swp
 *.dll
+*.sh
+*.ttf
