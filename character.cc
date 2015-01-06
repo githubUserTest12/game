@@ -230,6 +230,56 @@ Character::Character(int width, int height) : CHARACTER_WIDTH(width), CHARACTER_
 		attackClips[11].w = 49;
 		attackClips[11].h = 45;
 
+		secondAttackClips[0].x = 5;
+		secondAttackClips[0].y = 228;
+		secondAttackClips[0].w = 66;
+		secondAttackClips[0].h = 45;
+
+		secondAttackClips[1].x = 80;
+		secondAttackClips[1].y = 228;
+		secondAttackClips[1].w = 83;
+		secondAttackClips[1].h = 45;
+
+		secondAttackClips[2].x = 170;
+		secondAttackClips[2].y = 228;
+		secondAttackClips[2].w = 103;
+		secondAttackClips[2].h = 45;
+
+		secondAttackClips[3].x = 285;
+		secondAttackClips[3].y = 228;
+		secondAttackClips[3].w = 67;
+		secondAttackClips[3].h = 46;
+
+		secondAttackClips[4].x = 360;
+		secondAttackClips[4].y = 228;
+		secondAttackClips[4].w = 63;
+		secondAttackClips[4].h = 46;
+
+		secondAttackClips[5].x = 428;
+		secondAttackClips[5].y = 228;
+		secondAttackClips[5].w = 53;
+		secondAttackClips[5].h = 46;
+
+		secondAttackClips[6].x = 490;
+		secondAttackClips[6].y = 228;
+		secondAttackClips[6].w = 49;
+		secondAttackClips[6].h = 45;
+
+		secondAttackClips[7].x = 560;
+		secondAttackClips[7].y = 228;
+		secondAttackClips[7].w = 44;
+		secondAttackClips[7].h = 46;
+
+		secondAttackClips[8].x = 610;
+		secondAttackClips[8].y = 228;
+		secondAttackClips[8].w = 41;
+		secondAttackClips[8].h = 46;
+
+		secondAttackClips[9].x = 659;
+		secondAttackClips[9].y = 228;
+		secondAttackClips[9].w = 43;
+		secondAttackClips[9].h = 46;
+
 		/*
 		for(int i = 0; i < ANIMATION_FRAMES; ++i) {
 			spriteClips[i].x = x;
@@ -314,13 +364,6 @@ void Character::renderParticles(SDL_Rect &camera, bool toggleParticles) {
 void Character::handleEvent(SDL_Event &e) {
 	//If a key was pressed
 
-	/*
-	if(headJump == true) {
-		setVelocityY(0);
-		setVelocityY(CHARACTER_VELY);
-		headJump = false;
-	}
-	*/
 	if(e.type == SDL_KEYDOWN && e.key.repeat == 0) {
 		//Adjust the velocity
 		switch(e.key.keysym.sym) {
@@ -328,16 +371,13 @@ void Character::handleEvent(SDL_Event &e) {
 				//if(!isJumping) {
 				mVelY = 0; 
 				mVelY -= CHARACTER_VELY; 
-				//std::cout << mVelY << std::endl;
 				//}
 				break;
 			case SDLK_w: 
 				mVelY -= CHARACTER_VELY;
-				//std::cout << mVelY << std::endl;
 				break;
 			case SDLK_s: 
 				mVelY += CHARACTER_VELY;
-				//std::cout << mVelY << std::endl;
 				break;
 			//case SDLK_DOWN: mVelY += CHARACTER_VELY; break;
 			case SDLK_a: 
@@ -556,13 +596,16 @@ void Character::setCamera(SDL_Rect &camera) {
 void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, float heightScale) {
 	//Show the character
 	if(isAttacking) {
+		// Stop walking timer.
 		walkingTimer.stop();
 		firstWalk = false;
+
+		// Begin attack timer.
 		if(!attackingTimer.isStarted()) attackingTimer.start();
 		currentClip = &attackClips[attackingFrame];
 		attackingFrame = (attackingTimer.getTicks() / 50) % ATTACKING_FRAMES;
 		if(attackingFrame > 0) firstAttack = true;
-		if(attackingFrame % ANIMATION_FRAMES == 0 && firstAttack == true) {
+		if(attackingFrame % ATTACKING_FRAMES == 0 && firstAttack == true) {
 			firstAttack = false;
 			attackingTimer.stop();
 			attackingFrame = 0;
@@ -629,27 +672,6 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 			currentClip = &spriteClips[0];
 		}
 	}
-	// XXX BTON - YOU LEFT OFF HERE
-	//currentClip = &spriteClips[0];
-	// XXX BTON - CHANGE SOMETHING HERE.
-
-	/*
-	if(scale != 1.0 || heightScale != 1.0) {
-		dstrect.w = (int) (currentClip->w * scale);
-		dstrect.h = (int) (currentClip->h * heightScale);
-	}
-	else {
-		dstrect.w = currentClip->w;
-		dstrect.h = currentClip->h;
-	}
-	if(flip == SDL_FLIP_NONE) {
-		dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
-	}
-	else {
-		dstrect.x = (int)(mPosX) - camera.x;
-	}
-	dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
-	*/
 	dstrect.w = (int) (currentClip->w * scale);
 	dstrect.h = (int) (currentClip->h * heightScale);
 	if(flip == SDL_FLIP_NONE) dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
@@ -665,14 +687,12 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		dstrect.h = mBox.h;
 	}
 
-	//dstrect.x = (int)(mPosX) - camera.x - dstrect.w + CHARACTER_WIDTH;
-	//dstrect.y = (int)(mPosY) - camera.y - dstrect.h + CHARACTER_HEIGHT;
 	if(flip == SDL_FLIP_NONE) {
 		// To adjust for clipping size.
-		characterTexture.render(0 /*(int)(mPosX) - camera.x - currentClip->w + CHARACTER_WIDTH*/, 0 /*(int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT*/, currentClip, dstrect, 0, NULL, flip);
+		characterTexture.render(0, 0, currentClip, dstrect, 0, NULL, flip);
 	}
 	else {
-		characterTexture.render( 0 /*(int)(mPosX) - camera.x */, 0 /*(int)(mPosY) - camera.y - currentClip->h + CHARACTER_HEIGHT */, currentClip, dstrect, 0, NULL, flip);
+		characterTexture.render(0, 0, currentClip, dstrect, 0, NULL, flip);
 	}
 
 	// Show particles on top of character.

@@ -17,6 +17,7 @@ class Character {
 		static const int JUMPING_FRAMES = 6;
 		static const int FALLING_FRAMES = 6;
 		static const int ATTACKING_FRAMES = 12;
+		static const int SECOND_ATTACKING_FRAMES = 10;
 		static const int SPRITESHEET_WIDTH = 858;
 		//static const int SPRITESHEET_HEIGHT = 40;
 
@@ -26,6 +27,7 @@ class Character {
 		SDL_Rect jumpClips[JUMPING_FRAMES];
 		SDL_Rect fallClips[FALLING_FRAMES];
 		SDL_Rect attackClips[ATTACKING_FRAMES];
+		SDL_Rect secondAttackClips[SECOND_ATTACKING_FRAMES];
 
 		//Maximum axis velocity of the character
 		const int CHARACTER_VELY = 15 * 60; // * SCREEN_FPS; // 15;
@@ -50,6 +52,7 @@ class Character {
 		LTimer walkingTimer;
 
 		bool firstAttack = false;
+		bool secondAttack = false;
 		bool firstWalk = false;
 
 		//Initializes the variables allocates particles.
