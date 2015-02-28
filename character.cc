@@ -389,7 +389,10 @@ void Character::handleEvent(SDL_Event &e) {
 			default:
 				break;
 			case SDLK_f:
-				isAttacking = true;
+				if(attackingFrame >= 8 && attackingFrame < ATTACKING_FRAMES) {
+					secondAttack = true;
+				}
+				else if(secondAttack == false) isAttacking = true;
 				break;
 		}
 	}
@@ -603,13 +606,31 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 		// Begin attack timer.
 		if(!attackingTimer.isStarted()) attackingTimer.start();
 		currentClip = &attackClips[attackingFrame];
-		attackingFrame = (attackingTimer.getTicks() / 50) % ATTACKING_FRAMES;
+		attackingFrame = (attackingTimer.getTicks() / 40) % ATTACKING_FRAMES;
 		if(attackingFrame > 0) firstAttack = true;
-		if(attackingFrame % ATTACKING_FRAMES == 0 && firstAttack == true) {
+		if((attackingFrame % ATTACKING_FRAMES == 0 && firstAttack == true) || secondAttack == true) {
 			firstAttack = false;
 			attackingTimer.stop();
 			attackingFrame = 0;
 			isAttacking = false;
+			currentClip = &spriteClips[0];
+		}
+	}
+	else if(secondAttack) {
+		// Stop walking timer.
+		walkingTimer.stop();
+		firstWalk = false;
+
+		// Begin attack timer.
+		if(!attackingTimer.isStarted()) attackingTimer.start();
+		currentClip = &secondAttackClips[attackingFrame];
+		attackingFrame = (attackingTimer.getTicks() / 400) % SECOND_ATTACKING_FRAMES;
+		if(attackingFrame > 0) firstAttack = true;
+		if(attackingFrame % SECOND_ATTACKING_FRAMES == 0 && firstAttack == true) {
+			firstAttack = false;
+			attackingTimer.stop();
+			attackingFrame = 0;
+			secondAttack = false;
 			currentClip = &spriteClips[0];
 		}
 	}
@@ -678,11 +699,15 @@ void Character::render(SDL_Rect &camera, bool toggleParticles, float scale, floa
 	else dstrect.x = (int) (mBox.x - camera.x);
 	dstrect.y = (int) (mBox.y - camera.y);
 
-	if(isAttacking) { 
+	if(isAttacking || secondAttack) { 
 		if(flip == SDL_FLIP_HORIZONTAL) {
-			dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
+			if(secondAttack) dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
+			else dstrect.x = (int)(mBox.x - camera.x - dstrect.w + CHARACTER_WIDTH);
 		}
-		else dstrect.x = mBox.x - camera.x;
+		else {
+			if(secondAttack) dstrect.x = mBox.x - camera.x;
+			else dstrect.x = mBox.x - camera.x;
+		}
 		dstrect.y = mBox.y - camera.y;
 		dstrect.h = mBox.h;
 	}
